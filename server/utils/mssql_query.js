@@ -65,7 +65,12 @@ async function getRawTuples(cmd) {
 async function statApp(tuples, startDateTuples) {
   const stat = {};
   for (let i = 0; i < tuples.recordset.length; i += 1) {
-    // console.log([tuples.recordset[i].Birth_Date, tuples.recordset[i].Birth_Date.getFullYear(), tuples.recordset[i].Birth_Date.getMonth(), tuples.recordset[i].Birth_Date.getDate()]);
+    console.log([
+      tuples.recordset[i].Birth_Date,
+      tuples.recordset[i].Birth_Date.getFullYear(),
+      tuples.recordset[i].Birth_Date.getMonth(),
+      tuples.recordset[i].Birth_Date.getDate(),
+    ]);
     const {
       Chart,
       city,
@@ -104,33 +109,34 @@ async function statApp(tuples, startDateTuples) {
     }
 
     stat[Chart].reason.push(Reason);
+    if (typeof Reason === 'string') {
+      if (
+        Reason.toUpperCase().startsWith('IOV') === true &&
+        (stat[Chart].iovApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
+      ) {
+        stat[Chart].iovApptStatus = APPOINTMENT_CODE_MAP[Status];
+        stat[Chart].iovApptDate = Appt_Date;
+        stat[Chart].md = MD;
+      }
 
-    if (
-      Reason.toUpperCase().startsWith('IOV') === true &&
-      (stat[Chart].iovApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
-    ) {
-      stat[Chart].iovApptStatus = APPOINTMENT_CODE_MAP[Status];
-      stat[Chart].iovApptDate = Appt_Date;
-      stat[Chart].md = MD;
-    }
+      if (
+        Reason.toUpperCase().startsWith('R1') === true &&
+        (stat[Chart].r1ApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
+      ) {
+        stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
+        stat[Chart].r1ApptDate = Appt_Date;
+      }
 
-    if (
-      Reason.toUpperCase().startsWith('R1') === true &&
-      (stat[Chart].r1ApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
-    ) {
-      stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
-      stat[Chart].r1ApptDate = Appt_Date;
-    }
+      if (
+        Reason.toUpperCase().startsWith('ER') === true &&
+        APPOINTMENT_CODE_MAP[Status] === 'Completed'
+      ) {
+        stat[Chart].erCounter += 1;
+      }
 
-    if (
-      Reason.toUpperCase().startsWith('ER') === true &&
-      APPOINTMENT_CODE_MAP[Status] === 'Completed'
-    ) {
-      stat[Chart].erCounter += 1;
-    }
-
-    if (Reason.toUpperCase().startsWith('MONITOR') === true) {
-      stat[Chart].monitorCounter += 1;
+      if (Reason.toUpperCase().startsWith('MONITOR') === true) {
+        stat[Chart].monitorCounter += 1;
+      }
     }
   }
 
