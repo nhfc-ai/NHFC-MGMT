@@ -30,11 +30,15 @@ const APPOINTMENT_CODE_MAP_REV = {
 
 function calAge(dob) {
   const now = new Date();
-  return (
-    now.getFullYear() -
-    dob.getFullYear() -
-    ([now.getMonth(), now.getDate()] < [dob.getMonth(), dob.getDate()])
-  );
+  try {
+    return (
+      now.getFullYear() -
+      dob.getFullYear() -
+      ([now.getMonth(), now.getDate()] < [dob.getMonth(), dob.getDate()])
+    );
+  } catch (err) {
+    return null;
+  }
 }
 
 function identApptReason(obj, pattern) {
