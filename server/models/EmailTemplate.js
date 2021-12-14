@@ -12,7 +12,7 @@ EmailTemplate.init(
   {
     name: { type: DataTypes.STRING, allowNull: false, unique: true },
     subject: { type: DataTypes.STRING, allowNull: false },
-    message: { type: DataTypes.STRING, allowNull: false },
+    message: { type: DataTypes.STRING(5000), allowNull: false },
   },
   {
     // Other model options go here
@@ -60,15 +60,23 @@ async function insertTemplates() {
     },
   ];
 
-    for (const t of templates) { // eslint-disable-line
-      const et = await EmailTemplate.findOne({ name: t.name }); // eslint-disable-line
+  for (const t of templates) { // eslint-disable-line
+    const et = await EmailTemplate.findOne({ name: t.name }); // eslint-disable-line
 
     const message = t.message.replace(/\n/g, '').replace(/[ ]+/g, ' ').trim();
 
     if (!et) {
-      EmailTemplate.create({ ...t, message });
+      try {
+        await EmailTemplate.create({ ...t, message }); // eslint-disable-line
+      } catch (err) {
+        console.error('insertTemplates() create error:', err);
+      }
     } else if (et.subject !== t.subject || et.message !== message) {
-      EmailTemplate.update({ message: message, subject: t.subject }); // eslint-disable-line
+      try {
+        await et.update({ message: message, subject: t.subject }); // eslint-disable-line
+      } catch (err) {
+        console.error('insertTemplates() update error:', err);
+      }
     }
   }
 }
