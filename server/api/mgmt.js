@@ -12,7 +12,7 @@ const ROOT_URL = getRootUrl();
 const router = express.Router();
 
 router.use((req, res, next) => {
-  console.log([req.user, !req.user.isManagement]);
+  // console.log([req.user, !req.user.isManagement]);
   if (!req.user || !req.user.isManagement) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
