@@ -65,12 +65,12 @@ async function getRawTuples(cmd) {
 async function statApp(tuples, startDateTuples) {
   const stat = {};
   for (let i = 0; i < tuples.recordset.length; i += 1) {
-    console.log([
-      tuples.recordset[i].Birth_Date,
-      tuples.recordset[i].Birth_Date.getFullYear(),
-      tuples.recordset[i].Birth_Date.getMonth(),
-      tuples.recordset[i].Birth_Date.getDate(),
-    ]);
+    // console.log([
+    //   tuples.recordset[i].Birth_Date,
+    //   tuples.recordset[i].Birth_Date.getFullYear(),
+    //   tuples.recordset[i].Birth_Date.getMonth(),
+    //   tuples.recordset[i].Birth_Date.getDate(),
+    // ]);
     const {
       Chart,
       city,
