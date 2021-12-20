@@ -82,8 +82,7 @@ app.prepare().then(async () => {
 
   if (!dev) {
     server.set('trust proxy', 1); // sets req.hostname, req.ip
-    sess.cookie.secure = true; // sets cookie over HTTPS only
-    sess.cookie.domain = process.env.COOKIE_DOMAIN; // sets domain for production env
+    sess.cookie.secure = false; // sets cookie over HTTPS only
   }
 
   server.use(session(sess));
