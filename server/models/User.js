@@ -1,9 +1,9 @@
 const { Model, DataTypes } = require('sequelize');
 const _ = require('lodash');
-const sendEmail = require('../aws-ses');
+// const sendEmail = require('../aws-ses');
 const generateSlug = require('../utils/slugify');
 const { getEmailTemplate } = require('./EmailTemplate');
-const { newMysqlInstance } = require('../utils/utils');
+const { newMysqlInstance, sendEmail } = require('../utils/utils');
 require('dotenv').config();
 
 const sequelize = newMysqlInstance();
@@ -78,13 +78,16 @@ class User extends Model {
       const template = await getEmailTemplate('welcome', {
         userName: displayName,
       });
+      const devObj = await User.findOne({ where: { email: process.env.DEVELOPER_EMAIL_ADDRESS } });
+      // console.log(devObj);
+      const sendEmailRes = await sendEmail(devObj, email, template.subject, template.message, true);
 
-      await sendEmail({
-        from: process.env.EMAIL_ADDRESS_FROM,
-        to: [email],
-        subject: template.subject,
-        body: template.message,
-      });
+      // await sendEmail({
+      //   from: process.env.EMAIL_ADDRESS_FROM,
+      //   to: [email],
+      //   subject: template.subject,
+      //   body: template.message,
+      // });
     } catch (err) {
       console.error('Email sending error:', err);
     }

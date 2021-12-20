@@ -2,6 +2,7 @@
 
 const dfd = require('danfojs-node');
 const { Sequelize } = require('sequelize');
+const nodemailer = require('nodemailer');
 
 require('dotenv').config();
 
@@ -188,4 +189,54 @@ async function organizeIovR1DataForChart(twodArray, interval) {
   return sortedReturnArray;
 }
 
-module.exports = { convertIntegerToCapLetter, organizeIovR1DataForChart, newMysqlInstance };
+async function sendEmail(senderObj, toEmailAddress, subject, content, htmlMode) {
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      type: 'OAuth2',
+      user: senderObj.email,
+      clientId: process.env.GOOGLE_CLIENTID,
+      clientSecret: process.env.GOOGLE_CLIENTSECRET,
+      refreshToken: senderObj.googleRefreshToken,
+      accessToken: senderObj.googleAccessToken,
+    },
+  });
+
+  const mail = {
+    from: senderObj.email,
+    to: toEmailAddress,
+    subject,
+  };
+  if (htmlMode === true) {
+    mail.html = content;
+  } else {
+    mail.text = content;
+  }
+
+  transporter.sendMail(mail, (err, info) => {
+    if (err) {
+      console.log(err);
+      return null;
+    }
+    // see https://nodemailer.com/usage
+    // console.log(`info.messageId: ${info.messageId}`);
+    // console.log(`info.envelope: ${info.envelope}`);
+    // console.log(`info.accepted: ${info.accepted}`);
+    // console.log(`info.rejected: ${info.rejected}`);
+    // console.log(`info.pending: ${info.pending}`);
+    // console.log(`info.response: ${info.response}`);
+    // console.log(info);
+
+    return info;
+    // transporter.close();
+  });
+}
+
+module.exports = {
+  convertIntegerToCapLetter,
+  organizeIovR1DataForChart,
+  newMysqlInstance,
+  sendEmail,
+};

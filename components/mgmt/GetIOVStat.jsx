@@ -37,7 +37,7 @@ function GetIOVStats(props) {
             return;
           }
 
-          if (!startDate.getTime()) {
+          if (!startDate.getTime() || startDate.getFullYear() < 2016) {
             notify('Please input valid Start Date');
             return;
           }

@@ -4,7 +4,11 @@ const { OAuth2Client } = require('google-auth-library');
 const { google } = require('googleapis');
 const nodemailer = require('nodemailer');
 const { dateColumns } = require('./utils/mssql_cmd');
-const { convertIntegerToCapLetter, organizeIovR1DataForChart } = require('./utils/utils');
+const {
+  convertIntegerToCapLetter,
+  organizeIovR1DataForChart,
+  sendEmail,
+} = require('./utils/utils');
 
 const User = require('./models/User');
 const { Group } = require('./models/Group');
@@ -52,8 +56,8 @@ function setupGoogle({ server, ROOT_URL }) {
   passport.use(
     new Strategy(
       {
-        clientID: process.env.GOOGLE_CLIENTID,
-        clientSecret: process.env.GOOGLE_CLIENTSECRET,
+        clientID: process.env.GOOGLE_DEV_CLIENTID,
+        clientSecret: process.env.GOOGLE_DEV_CLIENTSECRET,
         callbackURL: `${ROOT_URL}/oauth2callback`,
       },
       verify,
@@ -140,45 +144,18 @@ function setupGoogle({ server, ROOT_URL }) {
   server.post('/send-gmail-email', async (req, res) => {
     try {
       const userObj = await User.findByPk(req.user.id);
-      console.log(userObj.email);
-      console.log([req.body.subject, req.body.content]);
+      // console.log(userObj.email);
+      // console.log([req.body.subject, req.body.content]);
 
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          type: 'OAuth2',
-          user: userObj.email,
-          clientId: process.env.GOOGLE_CLIENTID,
-          clientSecret: process.env.GOOGLE_CLIENTSECRET,
-          refreshToken: userObj.googleRefreshToken,
-          accessToken: userObj.googleAccessToken,
-        },
-      });
+      const sendEmailRes = await sendEmail(
+        userObj,
+        process.env.DEVELOPER_EMAIL_ADDRESS,
+        req.body.subject,
+        req.body.content,
+        false,
+      );
+      res.json(sendEmailRes);
 
-      const mail = {
-        from: userObj.email,
-        to: process.env.DEVELOPER_EMAIL_ADDRESS,
-        subject: req.body.subject,
-        text: req.body.content,
-      };
-
-      transporter.sendMail(mail, (err, info) => {
-        if (err) {
-          console.log(err);
-        } else {
-          // see https://nodemailer.com/usage
-          console.log(`info.messageId: ${info.messageId}`);
-          console.log(`info.envelope: ${info.envelope}`);
-          console.log(`info.accepted: ${info.accepted}`);
-          console.log(`info.rejected: ${info.rejected}`);
-          console.log(`info.pending: ${info.pending}`);
-          console.log(`info.response: ${info.response}`);
-          res.json(info);
-        }
-        transporter.close();
-      });
       // const oauth2Client = new OAuth2Client(
       //   process.env.GOOGLE_CLIENTID,
       //   process.env.GOOGLE_CLIENTSECRET,
