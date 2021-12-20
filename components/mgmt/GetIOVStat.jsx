@@ -37,8 +37,18 @@ function GetIOVStats(props) {
             return;
           }
 
+          if (!startDate.getTime()) {
+            notify('Please input valid Start Date');
+            return;
+          }
+
           if (!endDate) {
             notify('End Date is required');
+            return;
+          }
+
+          if (!endDate.getTime()) {
+            notify('Please input valid End Date');
             return;
           }
 
