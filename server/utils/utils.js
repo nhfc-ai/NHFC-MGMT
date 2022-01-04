@@ -102,6 +102,15 @@ function getLocalTimeRangeByCalenderMonth(dateObj) {
   return [startUTCDateString, endUTCDateString];
 }
 
+function getTodayInNextYear(dateObj) {
+  const fullYear = dateObj.getFullYear();
+  const month = dateObj.getMonth();
+  const day = dateObj.getDay();
+  const nextYearDate = new Date(fullYear+1, month, day, 0, 0, 0);
+  const nextYearDateString = formatDate(nextYearDate);
+  return nextYearDateString;
+}
+
 function newMysqlInstance() {
   return new Sequelize(
     process.env.MYSQL_DATABASE,
@@ -512,4 +521,5 @@ module.exports = {
   formatDate,
   formatPhoneNumber,
   getState,
+  getTodayInNextYear,
 };

@@ -9,6 +9,7 @@ import DatePicker from '@mui/lab/DatePicker';
 // import { getGithubReposApiMethod } from '../../lib/api/admin';
 // import { styleTextField } from '../SharedStyles';
 import notify from '../../lib/notify';
+import { getDateGivenIncreMonths } from '../../lib/utils';
 
 const propTypes = {
   onSave: PropTypes.func.isRequired,
@@ -16,6 +17,7 @@ const propTypes = {
 
 function GetIOVCalendly(props) {
   const [date, setDate] = React.useState(null);
+  const endDate = getDateGivenIncreMonths(new Date(), 3);
 
   return (
     <div style={{ padding: '10px 45px' }}>
@@ -55,7 +57,7 @@ function GetIOVCalendly(props) {
               views={['year', 'month']}
               label="Year and Month"
               minDate={new Date('2021-12-31')}
-              maxDate={new Date()}
+              maxDate={endDate}
               value={date}
               onChange={(newDate) => {
                 setDate(newDate);

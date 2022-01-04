@@ -74,7 +74,9 @@ class RedirectGoogleSheet extends React.Component {
     const { date } = ctx.query;
     console.log(`iov-calendly-spreadsheet ${date}`);
     const array = await getIovCalendlyDataApiMethod({ date });
-
+    if (array.length <= 1) {
+      return { spreadID: null };
+    }
     // console.log(array);
     const spreadData = await createIOVCalendlyGoogleSpreadsheet({ date, array });
     // console.log(array);
@@ -84,22 +86,33 @@ class RedirectGoogleSheet extends React.Component {
   }
 
   componentDidMount() {
-    window.open(
-      `https://docs.google.com/spreadsheets/d/${this.props.spreadID}/edit#gid=0`,
-      '_blank',
-    );
-
+    if (this.props.spreadID) {
+      window.open(
+        `https://docs.google.com/spreadsheets/d/${this.props.spreadID}/edit#gid=0`,
+        '_blank',
+      );
+    }
     setTimeout(() => {
       Router.push('/');
     }, 5000);
   }
 
   render() {
+    if (this.props.spreadID) {
+      return (
+        <div>
+          <h1>
+            You are redirecting to google sheet, this page will be back to the main page after 10
+            seconds.
+          </h1>
+        </div>
+      );
+    }
     return (
       <div>
         <h1>
-          You are redirecting to google sheet, this page will be back to the main page after 5
-          seconds.
+          There is no Calendly appointments in this month yet, this page will be back to the main
+          page after 10 seconds.
         </h1>
       </div>
     );

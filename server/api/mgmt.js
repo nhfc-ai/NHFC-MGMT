@@ -12,6 +12,7 @@ const {
 const { getEventInvitees } = require('../utils/calendly_api');
 const {
   formatDate,
+  getTodayInNextYear,
   getUTCTimeRangeByCalenderMonth,
   getLocalTimeRangeByCalenderMonth,
 } = require('../utils/utils');
@@ -57,13 +58,14 @@ router.get('/get-monthly-calendly-stats-spreadsheet', async (req, res) => {
     // console.log(`get-monthly-calendly-stats-spreadsheet ${date}`);
     const [startUTCDate, endUTCDate] = getUTCTimeRangeByCalenderMonth(new Date(date));
     const [startLocalDate, endLocalDate] = getLocalTimeRangeByCalenderMonth(new Date(date));
+    const nextYearDate = getTodayInNextYear(new Date(date));
 
     // console.log([startUTCDate, endUTCDate, startLocalDate, endLocalDate]);
     const inviteeList = await getEventInvitees(startUTCDate, endUTCDate);
     // console.log(inviteeList.length);
 
     // console.log([startDate, endDate]);
-    const cmdRawTuple = iovStats(startLocalDate, formatDate(new Date()));
+    const cmdRawTuple = iovStats(startLocalDate, nextYearDate);
 
     const pool = await mssql;
     const rawTuples = await pool.request().query(cmdRawTuple);

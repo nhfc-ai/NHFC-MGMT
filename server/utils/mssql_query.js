@@ -349,6 +349,7 @@ async function organizeArrayForDisplayV2(obj) {
 async function organizeArrayForCalendly(stats, inviteeList) {
   const arrayForDispaly = [];
   const columnTitleList = [
+    'Created Date',
     'Booked Date',
     'Calendly Appt Status',
     'Name',
@@ -380,6 +381,7 @@ async function organizeArrayForCalendly(stats, inviteeList) {
 
     const subList = [
       obj.date,
+      obj.apptDate,
       obj.status,
       obj.name,
       obj.type,

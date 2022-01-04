@@ -28,7 +28,7 @@ async function getCalendlyEventsWrapper(startTime, endTime) {
   console.log(iniUrl);
   const totalEvents = await getCalendlyEvents(iniUrl, headers);
   totalEvents.forEach((obj) => {
-    eventIDList.push(obj.uri);
+    eventIDList.push([obj.uri, obj.start_time]);
   });
   return eventIDList;
 }
@@ -70,7 +70,7 @@ async function getEventInvitees(startTime, endTime) {
   //   console.log(eventIDList.length);
   const calendlyAppts = [];
   await Promise.all(
-    eventIDList.map(async (id) => {
+    eventIDList.map(async ([id, start_time]) => {
       // console.log(id);
       const url = `${id}/invitees`;
       const res = await fetch(url, {
@@ -89,6 +89,7 @@ async function getEventInvitees(startTime, endTime) {
         infoObj.email = obj.email;
         infoObj.status = obj.status;
         infoObj.date = formatDate(new Date(obj.created_at));
+        infoObj.apptDate = formatDate(new Date(start_time));
         //   console.log(infoObj);
         calendlyAppts.push(infoObj);
       }
