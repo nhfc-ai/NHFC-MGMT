@@ -1,4 +1,5 @@
 const mssql = require('../models/Mssql');
+const { formatPhoneNumber, formatDate } = require('./utils');
 
 const APPOINTMENT_CODE_MAP = {
   0: 'Pending',
@@ -84,6 +85,10 @@ async function statApp(tuples, startDateTuples) {
       Status,
       Appt_Date,
       MD,
+      First_Name,
+      Last_Name,
+      Home_Email,
+      Home_Phone,
     } = tuples.recordset[i];
     if (Chart in stat === false) {
       stat[Chart] = {
@@ -105,6 +110,10 @@ async function statApp(tuples, startDateTuples) {
         monitorCounter: 0,
         ivfR1: null,
         ivfStartDate: null,
+        firstName: First_Name.replace(/\s/g, '').toLowerCase() || '',
+        lastName: Last_Name.replace(/\s/g, '').toLowerCase() || '',
+        email: Home_Email.replace(/\s/g, '').toLowerCase() || '',
+        phone: Home_Phone || '',
       };
     }
 
@@ -146,6 +155,93 @@ async function statApp(tuples, startDateTuples) {
       if (stat[Chart_Number].ivfStartDate < StartDate) {
         stat[Chart_Number].ivfStartDate = StartDate;
         stat[Chart_Number].ivfR1 = 'Y';
+      }
+    }
+  }
+
+  return stat;
+}
+
+async function statAppForCalendly(tuples) {
+  const stat = {};
+  for (let i = 0; i < tuples.recordset.length; i += 1) {
+    // console.log([
+    //   tuples.recordset[i].Birth_Date,
+    //   tuples.recordset[i].Birth_Date.getFullYear(),
+    //   tuples.recordset[i].Birth_Date.getMonth(),
+    //   tuples.recordset[i].Birth_Date.getDate(),
+    // ]);
+    const {
+      Chart,
+      city,
+      State,
+      Birth_Date,
+      Primary_Code,
+      Address_1,
+      Race,
+      Ref_Source,
+      Reason,
+      Status,
+      Appt_Date,
+      MD,
+      First_Name,
+      Last_Name,
+      Home_Email,
+      Home_Phone,
+    } = tuples.recordset[i];
+
+    // if (Reason.toUpperCase().startsWith('IOV') === false) {
+    //   continue;
+    // }
+
+    const Email = Home_Email.split(' ')[0];
+    // console.log([Email, Home_Phone]);
+    const statKey = `${First_Name} ${Last_Name} ${Email.toLowerCase() || ''} ${Home_Phone}`;
+    const statKeyAlt = Email ? Email.toLowerCase() : Home_Phone;
+
+    if (statKey in stat === false) {
+      stat[statKey] = {
+        phone: Home_Phone || '',
+        dob: Birth_Date,
+        firstName: First_Name.replace(/\s/g, '').toLowerCase() || '',
+        lastName: Last_Name.replace(/\s/g, '').toLowerCase() || '',
+        state: State,
+        email: Email.replace(/\s/g, '').toLowerCase() || '',
+        reason: [],
+        iovApptDate: null,
+        iovApptStatus: null,
+      };
+    }
+    if (statKeyAlt && statKeyAlt in stat === false) {
+      stat[statKeyAlt] = {
+        phone: Home_Phone || '',
+        dob: Birth_Date,
+        firstName: First_Name.replace(/\s/g, '').toLowerCase() || '',
+        lastName: Last_Name.replace(/\s/g, '').toLowerCase() || '',
+        state: State,
+        email: Email.replace(/\s/g, '').toLowerCase() || '',
+        reason: [],
+        iovApptDate: null,
+        iovApptStatus: null,
+      };
+    }
+
+    stat[statKey].reason.push(Reason);
+    if (statKeyAlt) {
+      stat[statKeyAlt].reason.push(Reason);
+    }
+
+    if (typeof Reason === 'string') {
+      if (
+        Reason.toUpperCase().startsWith('IOV') === true &&
+        (stat[statKey].iovApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
+      ) {
+        stat[statKey].iovApptStatus = APPOINTMENT_CODE_MAP[Status];
+        stat[statKey].iovApptDate = Appt_Date;
+        if (statKeyAlt) {
+          stat[statKeyAlt].iovApptStatus = APPOINTMENT_CODE_MAP[Status];
+          stat[statKeyAlt].iovApptDate = Appt_Date;
+        }
       }
     }
   }
@@ -226,7 +322,7 @@ async function organizeArrayForDisplayV2(obj) {
     if (identApptReason(obj[element], 'IOV') === true) {
       const subList = [
         element,
-        obj[element].dob,
+        formatDate(obj[element].dob),
         obj[element].age,
         obj[element].race,
         obj[element].code,
@@ -235,17 +331,65 @@ async function organizeArrayForDisplayV2(obj) {
         obj[element].state,
         obj[element].refSource,
         obj[element].iovApptStatus,
-        obj[element].iovApptDate,
+        formatDate(obj[element].iovApptDate),
         obj[element].md,
         obj[element].r1ApptStatus,
-        obj[element].r1ApptDate,
+        formatDate(obj[element].r1ApptDate),
         obj[element].ivfR1,
-        obj[element].ivfStartDate,
+        formatDate(obj[element].ivfStartDate),
         obj[element].monitorCounter,
         obj[element].erCounter,
       ];
       arrayForDispaly.push(subList);
     }
+  });
+  return arrayForDispaly;
+}
+
+async function organizeArrayForCalendly(stats, inviteeList) {
+  const arrayForDispaly = [];
+  const columnTitleList = [
+    'Booked Date',
+    'Calendly Appt Status',
+    'Name',
+    'Appt Type',
+    'Referral Source',
+    'State',
+    'IOV Confirmed',
+    'Latest IOV Status',
+    'Latest IOV Date',
+  ];
+  arrayForDispaly.push(columnTitleList);
+
+  inviteeList.forEach((obj) => {
+    const phoneWithClientFormat = formatPhoneNumber(obj.phone);
+    const queryKey = `${obj.name} ${obj.email.toLowerCase() || ''} ${phoneWithClientFormat}`;
+    const queryEmailKey = obj.email.toLowerCase() || null;
+    const queryPhoneKey = phoneWithClientFormat || null;
+    let realKey;
+
+    if (queryKey in stats === true) {
+      realKey = queryKey;
+    } else if (queryEmailKey && queryEmailKey in stats === true) {
+      realKey = queryEmailKey;
+    } else if (queryPhoneKey && queryPhoneKey in stats === true) {
+      realKey = queryPhoneKey;
+    } else {
+      realKey = null;
+    }
+
+    const subList = [
+      obj.date,
+      obj.status,
+      obj.name,
+      obj.type,
+      obj.refer,
+      obj.state,
+      realKey ? 'Y' : null,
+      realKey ? stats[realKey].iovApptStatus : null,
+      realKey ? formatDate(stats[realKey].iovApptDate) : null,
+    ];
+    arrayForDispaly.push(subList);
   });
   return arrayForDispaly;
 }
@@ -257,5 +401,8 @@ async function organizeArrayForDisplayV2(obj) {
 module.exports = {
   getRawTuples,
   statApp,
+  statAppForCalendly,
+  organizeArrayForDisplay,
   organizeArrayForDisplayV2,
+  organizeArrayForCalendly,
 };

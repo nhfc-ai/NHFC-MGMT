@@ -6,7 +6,10 @@ import Router from 'next/router';
 import { styleBackButton } from '../../components/SharedStyles';
 import withAuth from '../../lib/withAuth';
 
-const { getIovR1DataApiMethod, createGoogleSpreadsheet } = require('../../lib/api/mgmt');
+const {
+  getIovCalendlyDataApiMethod,
+  createIOVCalendlyGoogleSpreadsheet,
+} = require('../../lib/api/mgmt');
 
 // const ROOT_URL = getRootUrl();
 
@@ -68,13 +71,16 @@ const { getIovR1DataApiMethod, createGoogleSpreadsheet } = require('../../lib/ap
 
 class RedirectGoogleSheet extends React.Component {
   static async getInitialProps(ctx) {
-    const { startDate, endDate } = ctx.query;
-    const array = await getIovR1DataApiMethod({ startDate, endDate });
+    const { date } = ctx.query;
+    console.log(`iov-calendly-spreadsheet ${date}`);
+    const array = await getIovCalendlyDataApiMethod({ date });
+
     // console.log(array);
-    const spreadData = await createGoogleSpreadsheet({ startDate, endDate, array });
+    const spreadData = await createIOVCalendlyGoogleSpreadsheet({ date, array });
     // console.log(array);
     // console.log(spreadData);
     return { spreadID: spreadData.spreadsheetId };
+    // return { spreadID: '1F1r09tyScQbkqhIxOh1THz_VQY0wa1KmMnnilqUnq8M' };
   }
 
   componentDidMount() {

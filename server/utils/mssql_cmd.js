@@ -5,7 +5,7 @@ const iovStats = (startDate, endDate) => {
   //             join dbo.Patien_Info_V5 as p on p.Chart_Number = a.Chart where a.Appt_Date between '${startDate}' and '${endDate}'
   //             order by a.Appt_Date`;
   return `select a.Chart, p.Birth_Date, p.Race, p.Primary_Code, p.Address_1, p.city, p.State, a.Reason, 
-              a.Appt_Date, p.Ref_Source, a.MD, a.Status from dbo.Appointment_VIEW as a inner 
+              a.Appt_Date, p.Ref_Source, a.MD, a.Status, p.First_Name, p.Last_Name, p.Home_Email, p.Home_Phone from dbo.Appointment_VIEW as a inner 
               join dbo.Patien_Info_V5 as p on p.Chart_Number = a.Chart where a.Appt_Date between '${startDate}' and '${endDate}' 
               order by a.Appt_Date`;
 };
