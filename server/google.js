@@ -55,8 +55,8 @@ function setupGoogle({ server, ROOT_URL }) {
   passport.use(
     new Strategy(
       {
-        clientID: process.env.GOOGLE_DEV_CLIENTID,
-        clientSecret: process.env.GOOGLE_DEV_CLIENTSECRET,
+        clientID: process.env.GOOGLE_CLIENTID,
+        clientSecret: process.env.GOOGLE_CLIENTSECRET,
         callbackURL: `${ROOT_URL}/oauth2callback`,
       },
       verify,
@@ -211,8 +211,8 @@ function setupGoogle({ server, ROOT_URL }) {
       const userObj = await User.findByPk(req.user.id);
 
       const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_DEV_CLIENTID,
-        process.env.GOOGLE_DEV_CLIENTSECRET,
+        process.env.GOOGLE_CLIENTID,
+        process.env.GOOGLE_CLIENTSECRET,
         `${ROOT_URL}/oauth2callback`,
       );
 
@@ -469,8 +469,8 @@ function setupGoogle({ server, ROOT_URL }) {
       const userObj = await User.findByPk(req.user.id);
 
       const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_DEV_CLIENTID,
-        process.env.GOOGLE_DEV_CLIENTSECRET,
+        process.env.GOOGLE_CLIENTID,
+        process.env.GOOGLE_CLIENTSECRET,
         `${ROOT_URL}/oauth2callback`,
       );
 
