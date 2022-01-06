@@ -69,16 +69,16 @@ const {
 
 // export default withAuth(getIOVStats, { adminRequired: true });
 
-class RedirectGoogleSheet extends React.Component {
+class RedirectCalendlyGoogleSheet extends React.Component {
   static async getInitialProps(ctx) {
-    const { date } = ctx.query;
+    const { date, checked } = ctx.query;
     console.log(`iov-calendly-spreadsheet ${date}`);
-    const array = await getIovCalendlyDataApiMethod({ date });
+    const array = await getIovCalendlyDataApiMethod({ date, checked });
     if (array.length <= 1) {
       return { spreadID: null };
     }
     // console.log(array);
-    const spreadData = await createIOVCalendlyGoogleSpreadsheet({ date, array });
+    const spreadData = await createIOVCalendlyGoogleSpreadsheet({ date, array, checked });
     // console.log(array);
     // console.log(spreadData);
     return { spreadID: spreadData.spreadsheetId };
@@ -119,4 +119,4 @@ class RedirectGoogleSheet extends React.Component {
   }
 }
 
-export default withAuth(RedirectGoogleSheet);
+export default withAuth(RedirectCalendlyGoogleSheet);

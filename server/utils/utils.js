@@ -37,13 +37,17 @@ const monthNameIndex = new Map([
 ]);
 
 function formatPhoneNumber(phoneNumberString) {
-  if (phoneNumberString.substring(0, 2) === '+1') {
-    return `(${phoneNumberString.substring(3, 6)}) ${phoneNumberString.substring(
-      7,
-      10,
-    )}-${phoneNumberString.substring(11, 15)}`;
+  try {
+    if (phoneNumberString.substring(0, 2) === '+1') {
+      return `(${phoneNumberString.substring(3, 6)}) ${phoneNumberString.substring(
+        7,
+        10,
+      )}-${phoneNumberString.substring(11, 15)}`;
+    }
+    return phoneNumberString.replace(/\s/g, '').substring(1, 11);
+  } catch (err) {
+    return '';
   }
-  return phoneNumberString.replace(/\s/g, '').substring(1, 11);
 }
 
 function formatDate(date) {
@@ -106,7 +110,7 @@ function getTodayInNextYear(dateObj) {
   const fullYear = dateObj.getFullYear();
   const month = dateObj.getMonth();
   const day = dateObj.getDay();
-  const nextYearDate = new Date(fullYear+1, month, day, 0, 0, 0);
+  const nextYearDate = new Date(fullYear + 1, month, day, 0, 0, 0);
   const nextYearDateString = formatDate(nextYearDate);
   return nextYearDateString;
 }
@@ -228,6 +232,87 @@ async function statDataByTime(df, myCol, interval) {
     return df.groupby(['year', 'month']).col([myCol]).count();
   }
   return df.groupby(['year']).col([myCol]).count();
+}
+
+async function pruneDataByDate(df, myCol, targetDateObj) {
+  // console.log(myCol);
+  // df.sort_values({ by: myCol, inplace: true });
+  // console.log(df[myCol].values);
+  const targetYear = targetDateObj.getUTCFullYear();
+  const targetMonth = targetDateObj.getUTCMonth();
+  // console.log([targetYear, targetMonth]);
+
+  const dt = processDate(df.column(myCol).values);
+  // console.log(dt);
+  // dt.month_name().print();
+  // df.addColumn({ column: 'year', values: dt.year().astype('string').values, inplace: true });
+  // df.addColumn({ column: 'month', values: dt.month_name().values, inplace: true });
+  df.addColumn({ column: 'year', values: utcYear(dt).astype('int32').values, inplace: true });
+  df.addColumn({ column: 'month', values: utcMonth(dt).astype('int32').values, inplace: true });
+  // df.sort_values({ by: myCol, inplace: true });
+  // df.loc({
+  //   rows: df.column('year').eq(targetYear).and(df.column('month').eq(targetMonth)),
+  // }).print();
+  // df.loc({ rows: df.column('month').eq(targetMonth) }).print();
+  // df.loc({ rows: df.column('year').eq(targetYear) })
+  //   .loc({ rows: df.column('month').eq(targetMonth) })
+  //   .print();
+  return df.loc({
+    rows: df.column('year').eq(targetYear).and(df.column('month').eq(targetMonth)),
+  });
+}
+
+async function organizeCalendlyFullModeData(twoDArray, dateObj) {
+  let returnArray = [];
+  const df = new dfd.DataFrame(twoDArray.slice(1), { columns: twoDArray[0] });
+  const pruneDataFrame = await pruneDataByDate(df, 'Created Date', dateObj);
+  // console.log(pruneDataFrame.values);
+  if (pruneDataFrame.values.length !== 0) {
+    returnArray = pruneDataFrame.loc({ columns: twoDArray[0] }).values;
+    returnArray.unshift(twoDArray[0]);
+  } else {
+    returnArray.push(twoDArray[0]);
+  }
+
+  const bookedDateCountDf = await statDataByTime(df, 'Booked Date', 'monthly');
+  bookedDateCountDf.rename({
+    mapper: { 'Booked Date_count': 'Group_by_Booked_Date_count' },
+    inplace: true,
+  });
+  const createdDateCountDf = await statDataByTime(df, 'Created Date', 'monthly');
+  createdDateCountDf.rename({
+    mapper: { 'Created Date_count': 'Group_by_Created_Date_count' },
+    inplace: true,
+  });
+
+  const innerJoinDf = dfd.merge({
+    left: bookedDateCountDf,
+    right: createdDateCountDf,
+    on: ['year', 'month'],
+    how: 'outer',
+  });
+
+  innerJoinDf.addColumn({
+    column: 'month+year',
+    values: innerJoinDf.month.str.concat(innerJoinDf.year.astype('string').values, 1).values,
+    inplace: true,
+  });
+
+  // innerJoinDf.print();
+  const returnChartArray = innerJoinDf.loc({
+    columns: ['month+year', 'Group_by_Created_Date_count', 'Group_by_Booked_Date_count'],
+  }).values;
+
+  const indexArray = reorderCalendarMonths(innerJoinDf['month+year'].values);
+  // console.log(indexArray);
+
+  const sortedReturnChartArray = indexArray.map((i) => returnChartArray[i]);
+  sortedReturnChartArray.unshift([
+    'month+year',
+    'Group_by_Created_Date_count',
+    'Group_by_Booked_Date_count',
+  ]);
+  return [returnArray, sortedReturnChartArray];
 }
 
 async function organizeIovR1DataForChart(twodArray, interval) {
@@ -522,4 +607,5 @@ module.exports = {
   formatPhoneNumber,
   getState,
   getTodayInNextYear,
+  organizeCalendlyFullModeData,
 };

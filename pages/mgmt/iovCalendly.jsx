@@ -9,13 +9,13 @@ import { formatDate } from '../../lib/utils';
 // import { styleTextField } from '../../components/SharedStyles';
 
 class IOVCanlendly extends React.Component {
-  setDateOnSave = async (date) => {
+  setDateOnSave = async ({date, checked}) => {
     NProgress.start();
     try {
       console.log(`iovCalendly ${formatDate(date)}`);
       Router.push(
-        `/mgmt/iov-calendly-spreadsheet?date=${formatDate(date)}`,
-        `/mgmt/iov-calendly-spreadsheet?date=${formatDate(date)}`,
+        `/mgmt/iov-calendly-spreadsheet?date=${formatDate(date)}&checked=${checked}`,
+        `/mgmt/iov-calendly-spreadsheet?date=${formatDate(date)}&checked=${checked}`,
       );
       // Router.push(`www.google.com`, `www.google.com`);
       NProgress.done();

@@ -201,6 +201,8 @@ async function statAppForCalendly(tuples) {
 
     if (statKey in stat === false) {
       stat[statKey] = {
+        chart: Chart,
+        insurance: Primary_Code,
         phone: Home_Phone || '',
         dob: Birth_Date,
         firstName: First_Name.replace(/\s/g, '').toLowerCase() || '',
@@ -214,6 +216,8 @@ async function statAppForCalendly(tuples) {
     }
     if (statKeyAlt && statKeyAlt in stat === false) {
       stat[statKeyAlt] = {
+        chart: Chart,
+        insurance: Primary_Code,
         phone: Home_Phone || '',
         dob: Birth_Date,
         firstName: First_Name.replace(/\s/g, '').toLowerCase() || '',
@@ -352,9 +356,13 @@ async function organizeArrayForCalendly(stats, inviteeList) {
     'Created Date',
     'Booked Date',
     'Calendly Appt Status',
+    'Chart Number',
     'Name',
+    'Phone Number',
+    'Email',
     'Appt Type',
     'Referral Source',
+    'Insurance Info',
     'State',
     'IOV Confirmed',
     'Latest IOV Status',
@@ -363,7 +371,7 @@ async function organizeArrayForCalendly(stats, inviteeList) {
   arrayForDispaly.push(columnTitleList);
 
   inviteeList.forEach((obj) => {
-    const phoneWithClientFormat = formatPhoneNumber(obj.phone);
+    const phoneWithClientFormat = formatPhoneNumber(obj.phone) || '';
     const queryKey = `${obj.name} ${obj.email.toLowerCase() || ''} ${phoneWithClientFormat}`;
     const queryEmailKey = obj.email.toLowerCase() || null;
     const queryPhoneKey = phoneWithClientFormat || null;
@@ -383,9 +391,13 @@ async function organizeArrayForCalendly(stats, inviteeList) {
       obj.date,
       obj.apptDate,
       obj.status,
+      realKey ? stats[realKey].chart : null,
       obj.name,
+      obj.phone,
+      obj.email,
       obj.type,
       obj.refer,
+      realKey ? stats[realKey].insurance : obj.insurance,
       obj.state,
       realKey ? 'Y' : null,
       realKey ? stats[realKey].iovApptStatus : null,

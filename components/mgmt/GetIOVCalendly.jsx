@@ -5,6 +5,9 @@ import TextField from '@material-ui/core/TextField';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 // import { getGithubReposApiMethod } from '../../lib/api/admin';
 // import { styleTextField } from '../SharedStyles';
@@ -17,7 +20,12 @@ const propTypes = {
 
 function GetIOVCalendly(props) {
   const [date, setDate] = React.useState(null);
+  const [checked, setChecked] = React.useState(true);
   const endDate = getDateGivenIncreMonths(new Date(), 3);
+
+  const handleChange = (event) => {
+    setChecked(event.target.checked);
+  };
 
   return (
     <div style={{ padding: '10px 45px' }}>
@@ -47,7 +55,7 @@ function GetIOVCalendly(props) {
             return;
           }
 
-          props.onSave(date);
+          props.onSave({ date, checked });
         }}
       >
         <br />
@@ -64,6 +72,18 @@ function GetIOVCalendly(props) {
               }}
               renderInput={(params) => <TextField {...params} />}
             />
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={checked}
+                    onChange={handleChange}
+                    inputProps={{ 'aria-label': 'controlled' }}
+                  />
+                }
+                label="Group by Created Date?"
+              />
+            </FormGroup>
           </LocalizationProvider>
         </div>
         <br />

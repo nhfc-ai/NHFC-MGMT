@@ -21,10 +21,13 @@ async function getCalendlyEvents(url) {
   return eventList;
 }
 
-async function getCalendlyEventsWrapper(startTime, endTime) {
+async function getCalendlyEventsWrapper(startTime, endTime, fullMode) {
   const eventIDList = [];
   //   const headers = { 'Content-Type': 'application/json', Authorization: process.env.CALENDLY_TOKEN };
-  const iniUrl = `${process.env.CALENDLY_API_URL}${calendlyAPIMethods.scheduled_events}?count=100&min_start_time=${startTime}&max_start_time=${endTime}&organization=${process.env.CALENDLY_ORGANIZATION_ID}`;
+  const iniUrl =
+    fullMode === 'true'
+      ? `${process.env.CALENDLY_API_URL}${calendlyAPIMethods.scheduled_events}?count=100&organization=${process.env.CALENDLY_ORGANIZATION_ID}`
+      : `${process.env.CALENDLY_API_URL}${calendlyAPIMethods.scheduled_events}?count=100&min_start_time=${startTime}&max_start_time=${endTime}&organization=${process.env.CALENDLY_ORGANIZATION_ID}`;
   console.log(iniUrl);
   const totalEvents = await getCalendlyEvents(iniUrl, headers);
   totalEvents.forEach((obj) => {
@@ -34,7 +37,15 @@ async function getCalendlyEventsWrapper(startTime, endTime) {
 }
 
 function collectInviteeInfo(col) {
-  const infoObj = { phone: null, dob: null, state: null, request: null, refer: null, type: null };
+  const infoObj = {
+    phone: null,
+    dob: null,
+    state: null,
+    request: null,
+    refer: null,
+    type: null,
+    insurance: null,
+  };
   col.forEach((obj) => {
     const question = obj.question.replace(/\s/g, '');
     if (question === 'PhoneNumber') {
@@ -58,6 +69,10 @@ function collectInviteeInfo(col) {
       infoObj.type = obj.answer;
     }
 
+    if (question === 'InsuranceCompany') {
+      infoObj.insurance = obj.answer;
+    }
+
     if (question === 'Howdidyouhearaboutus?') {
       infoObj.refer = obj.answer;
     }
@@ -65,8 +80,8 @@ function collectInviteeInfo(col) {
   return infoObj;
 }
 
-async function getEventInvitees(startTime, endTime) {
-  const eventIDList = await getCalendlyEventsWrapper(startTime, endTime);
+async function getEventInvitees(startTime, endTime, fullMode) {
+  const eventIDList = await getCalendlyEventsWrapper(startTime, endTime, fullMode);
   //   console.log(eventIDList.length);
   const calendlyAppts = [];
   await Promise.all(

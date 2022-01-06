@@ -53,24 +53,29 @@ router.get('/get-iov-r1-spreadsheet', async (req, res) => {
 
 router.get('/get-monthly-calendly-stats-spreadsheet', async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, checked } = req.query;
     // console.log(req.query);
     // console.log(`get-monthly-calendly-stats-spreadsheet ${date}`);
     const [startUTCDate, endUTCDate] = getUTCTimeRangeByCalenderMonth(new Date(date));
-    const [startLocalDate, endLocalDate] = getLocalTimeRangeByCalenderMonth(new Date(date));
+    const [startLocalDate, endLocalDate] =
+      checked === 'true'
+        ? getLocalTimeRangeByCalenderMonth(new Date('2021-12-03'))
+        : getLocalTimeRangeByCalenderMonth(new Date(date));
     const nextYearDate = getTodayInNextYear(new Date(date));
 
     // console.log([startUTCDate, endUTCDate, startLocalDate, endLocalDate]);
-    const inviteeList = await getEventInvitees(startUTCDate, endUTCDate);
-    // console.log(inviteeList.length);
+    const inviteeList = await getEventInvitees(startUTCDate, endUTCDate, checked);
+    // console.log(inviteeList);
 
     // console.log([startDate, endDate]);
+
     const cmdRawTuple = iovStats(startLocalDate, nextYearDate);
 
     const pool = await mssql;
     const rawTuples = await pool.request().query(cmdRawTuple);
     // console.log(rawTuples);
     const stats = await statAppForCalendly(rawTuples);
+    // console.log(stats);
     const array = await organizeArrayForCalendly(stats, inviteeList);
     // console.log(array);
     res.json(array);

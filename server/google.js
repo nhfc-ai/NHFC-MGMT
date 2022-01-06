@@ -6,6 +6,7 @@ const { dateColumns } = require('./utils/mssql_cmd');
 const {
   convertIntegerToCapLetter,
   organizeIovR1DataForChart,
+  organizeCalendlyFullModeData,
   sendEmail,
 } = require('./utils/utils');
 
@@ -403,34 +404,6 @@ function setupGoogle({ server, ROOT_URL }) {
       //
       // end of inject spreadsheet data
       //
-
-      //
-      // inject chart data
-      //
-      // const chartData2dArray = await organizeIovR1DataForChart(req.body.array);
-
-      // console.log(chartData2dArray);
-
-      // const chartColumnList = chartData2dArray[0];
-      // const chartLastColumn = convertIntegerToCapLetter(columnList.length);
-
-      // const chartDataRange = `A1:${chartLastColumn}${chartData2dArray.length}`;
-
-      // const chartValuesBody = {
-      //   resource: {
-      //     data: {
-      //       range: dataRange,
-      //       majorDimension: 'ROWS',
-      //       values: chartData2dArray,
-      //     },
-      //     valueInputOption: 'RAW',
-      //   },
-      //   spreadsheetId: response.spreadsheetId,
-      // };
-
-      // const chartRequests = [];
-
-      // chartRequests.push();
       try {
         const sheetResponseUpdate = (await sheets.spreadsheets.batchUpdate(sheetBody)).data;
         // console.log(JSON.stringify(sheetResponseUpdate, null, 2));
@@ -439,21 +412,6 @@ function setupGoogle({ server, ROOT_URL }) {
       } catch (err) {
         console.error(err);
       }
-
-      // const spreadsheetData = await sheets.spreadsheets.create(
-      //   {
-      //     resource,
-      //     fields: 'spreadsheetId',
-      //   },
-      //   (err, spreadsheet) => {
-      //     if (err) {
-      //       // Handle error.
-      //       console.log(err);
-      //     }
-      //     console.log(spreadsheet.data);
-      //   },
-      // ).data;
-      // console.log(response);
       res.json(response);
     } catch (err) {
       console.error(err);
@@ -468,6 +426,12 @@ function setupGoogle({ server, ROOT_URL }) {
       //
       const userObj = await User.findByPk(req.user.id);
 
+      const fullMode = req.body.checked;
+      const dateObj = new Date(req.body.date);
+      console.log([fullMode, req.body.date]);
+      let prunedArray = [];
+      let chartArray = [];
+
       const oauth2Client = new OAuth2Client(
         process.env.GOOGLE_CLIENTID,
         process.env.GOOGLE_CLIENTSECRET,
@@ -480,10 +444,10 @@ function setupGoogle({ server, ROOT_URL }) {
       });
 
       const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
-
+      const sheetBaseTitle = `iov-calendly-spreadsheet-${req.body.date.substring(0, 7)}`;
       const resource = {
         properties: {
-          title: `iov-calendly-spreadsheet-${req.body.date.substring(0, 7)}`,
+          title: fullMode === 'true' ? `${sheetBaseTitle}-groupby-created-date` : sheetBaseTitle,
         },
       };
 
@@ -509,10 +473,14 @@ function setupGoogle({ server, ROOT_URL }) {
       // inject spreadsheet data
       //
       // main data
+      if (fullMode === 'true') {
+        [prunedArray, chartArray] = await organizeCalendlyFullModeData(req.body.array, dateObj);
+      }
       const columnList = req.body.array[0];
       const lastColumn = convertIntegerToCapLetter(columnList.length);
+      const rowLength = fullMode === 'true' ? prunedArray.length : req.body.array.length;
 
-      const dataRange = `Main Table!A1:${lastColumn}${req.body.array.length}`;
+      const dataRange = `Main Table!A1:${lastColumn}${rowLength}`;
 
       const valuesBody = {
         resource: {
@@ -520,7 +488,7 @@ function setupGoogle({ server, ROOT_URL }) {
             {
               range: dataRange,
               majorDimension: 'ROWS',
-              values: req.body.array,
+              values: fullMode === 'true' ? prunedArray : req.body.array,
             },
           ],
           valueInputOption: 'RAW',
@@ -529,114 +497,113 @@ function setupGoogle({ server, ROOT_URL }) {
       };
 
       // chart data
+      if (fullMode === 'true') {
+        requests.push({
+          addSheet: {
+            properties: {
+              sheetId: 1,
+              title: 'Monthly Statistic Chart',
+            },
+          },
+        });
 
-      // const chartData2dArray = await organizeIovR1DataForChart(req.body.array);
-      // // console.log(chartData2dArray);
-      // const chartColumnList = chartData2dArray[0];
-      // const chartLastColumn = convertIntegerToCapLetter(chartColumnList.length);
+        const chartColumnList = chartArray[0];
+        const chartLastColumn = convertIntegerToCapLetter(chartColumnList.length);
 
-      // const chartDataRange = `Monthly Statistic Chart!A1:${chartLastColumn}${chartData2dArray.length}`;
+        const chartDataRange = `Monthly Statistic Chart!A1:${chartLastColumn}${chartArray.length}`;
 
-      // const valuesBody = {
-      //   resource: {
-      //     data: [
-      //       {
-      //         range: dataRange,
-      //         majorDimension: 'ROWS',
-      //         values: req.body.array,
-      //       },
-      //       { range: chartDataRange, majorDimension: 'ROWS', values: chartData2dArray },
-      //     ],
-      //     valueInputOption: 'RAW',
-      //   },
-      //   spreadsheetId: response.spreadsheetId,
-      // };
+        valuesBody.resource.data.push({
+          range: chartDataRange,
+          majorDimension: 'ROWS',
+          values: chartArray,
+        });
 
-      // requests.push({
-      //   addChart: {
-      //     chart: {
-      //       spec: {
-      //         title: 'IOV and IVF R1 Monthly Statistics',
-      //         basicChart: {
-      //           chartType: 'COLUMN',
-      //           legendPosition: 'BOTTOM-LEGEND',
-      //           axis: [
-      //             {
-      //               position: 'BOTTOM_AXIS',
-      //               title: 'Calendar Months',
-      //             },
-      //             {
-      //               position: 'LEFT_AXIS',
-      //               title: 'Count',
-      //             },
-      //           ],
-      //           domains: [
-      //             {
-      //               domain: {
-      //                 sourceRange: {
-      //                   sources: [
-      //                     {
-      //                       sheetId: 1,
-      //                       startRowIndex: 0,
-      //                       endRowIndex: chartData2dArray.length,
-      //                       startColumnIndex: 0,
-      //                       endColumnIndex: 1,
-      //                     },
-      //                   ],
-      //                 },
-      //               },
-      //             },
-      //           ],
-      //           series: [
-      //             {
-      //               series: {
-      //                 sourceRange: {
-      //                   sources: [
-      //                     {
-      //                       sheetId: 1,
-      //                       startRowIndex: 0,
-      //                       endRowIndex: chartData2dArray.length,
-      //                       startColumnIndex: 1,
-      //                       endColumnIndex: 2,
-      //                     },
-      //                   ],
-      //                 },
-      //               },
-      //               targetAxis: 'LEFT_AXIS',
-      //             },
-      //             {
-      //               series: {
-      //                 sourceRange: {
-      //                   sources: [
-      //                     {
-      //                       sheetId: 1,
-      //                       startRowIndex: 0,
-      //                       endRowIndex: chartData2dArray.length,
-      //                       startColumnIndex: 2,
-      //                       endColumnIndex: 3,
-      //                     },
-      //                   ],
-      //                 },
-      //               },
-      //               targetAxis: 'LEFT_AXIS',
-      //             },
-      //           ],
-      //           headerCount: 1,
-      //         },
-      //       },
-      //       position: {
-      //         overlayPosition: {
-      //           anchorCell: {
-      //             sheetId: 1,
-      //             rowIndex: 0,
-      //             columnIndex: 4,
-      //           },
-      //         },
-      //       },
-      //     },
-      //   },
-      // });
-      // //
+        requests.push({
+          addChart: {
+            chart: {
+              spec: {
+                title: 'Calendly Monthly Statistics',
+                basicChart: {
+                  chartType: 'COLUMN',
+                  legendPosition: 'BOTTOM-LEGEND',
+                  axis: [
+                    {
+                      position: 'BOTTOM_AXIS',
+                      title: 'Calendar Months',
+                    },
+                    {
+                      position: 'LEFT_AXIS',
+                      title: 'Count',
+                    },
+                  ],
+                  domains: [
+                    {
+                      domain: {
+                        sourceRange: {
+                          sources: [
+                            {
+                              sheetId: 1,
+                              startRowIndex: 0,
+                              endRowIndex: chartArray.length,
+                              startColumnIndex: 0,
+                              endColumnIndex: 1,
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                  series: [
+                    {
+                      series: {
+                        sourceRange: {
+                          sources: [
+                            {
+                              sheetId: 1,
+                              startRowIndex: 0,
+                              endRowIndex: chartArray.length,
+                              startColumnIndex: 1,
+                              endColumnIndex: 2,
+                            },
+                          ],
+                        },
+                      },
+                      targetAxis: 'LEFT_AXIS',
+                    },
+                    {
+                      series: {
+                        sourceRange: {
+                          sources: [
+                            {
+                              sheetId: 1,
+                              startRowIndex: 0,
+                              endRowIndex: chartArray.length,
+                              startColumnIndex: 2,
+                              endColumnIndex: 3,
+                            },
+                          ],
+                        },
+                      },
+                      targetAxis: 'LEFT_AXIS',
+                    },
+                  ],
+                  headerCount: 1,
+                },
+              },
+              position: {
+                overlayPosition: {
+                  anchorCell: {
+                    sheetId: 1,
+                    rowIndex: 0,
+                    columnIndex: 4,
+                  },
+                },
+              },
+            },
+          },
+        });
+        //
+      }
 
       const sheetBody = {
         resource: { requests },
@@ -646,33 +613,6 @@ function setupGoogle({ server, ROOT_URL }) {
       // end of inject spreadsheet data
       //
 
-      //
-      // inject chart data
-      //
-      // const chartData2dArray = await organizeIovR1DataForChart(req.body.array);
-
-      // console.log(chartData2dArray);
-
-      // const chartColumnList = chartData2dArray[0];
-      // const chartLastColumn = convertIntegerToCapLetter(columnList.length);
-
-      // const chartDataRange = `A1:${chartLastColumn}${chartData2dArray.length}`;
-
-      // const chartValuesBody = {
-      //   resource: {
-      //     data: {
-      //       range: dataRange,
-      //       majorDimension: 'ROWS',
-      //       values: chartData2dArray,
-      //     },
-      //     valueInputOption: 'RAW',
-      //   },
-      //   spreadsheetId: response.spreadsheetId,
-      // };
-
-      // const chartRequests = [];
-
-      // chartRequests.push();
       try {
         const sheetResponseUpdate = (await sheets.spreadsheets.batchUpdate(sheetBody)).data;
         // console.log(JSON.stringify(sheetResponseUpdate, null, 2));
