@@ -6,6 +6,8 @@ const sqlConfig = {
   database: process.env.MSSQL_DATABASE,
   server: process.env.MSSQL_SERVER,
   arrayRowMode: true,
+  connectionTimeout: 150000,
+  requestTimeout: 150000,
   pool: {
     max: 10,
     min: 0,

@@ -1,33 +1,15 @@
 const mssql = require('../models/Mssql');
-const { formatPhoneNumber, formatDate } = require('./utils');
-
-const APPOINTMENT_CODE_MAP = {
-  0: 'Pending',
-  1: 'Confirmed',
-  2: 'Waiting',
-  3: 'BeingSeen',
-  4: 'Completed',
-  5: 'Late',
-  6: 'Missed',
-  7: 'Canceled',
-  8: 'Rescheduled',
-  9: 'Recalled',
-  10: 'Unknown',
-};
-
-const APPOINTMENT_CODE_MAP_REV = {
-  Pending: 0,
-  Confirmed: 1,
-  Waiting: 2,
-  BeingSeen: 3,
-  Completed: 4,
-  Late: 5,
-  Missed: 6,
-  Canceled: 7,
-  Rescheduled: 8,
-  Recalled: 9,
-  Unknown: 10,
-};
+const {
+  formatPhoneNumber,
+  formatDate,
+  formatUTCDate,
+  iovR1MainTable,
+  iovR1MonitorTable,
+  iovR1ERTable,
+  iovR1TransferTable,
+  APPOINTMENT_CODE_MAP,
+  APPOINTMENT_CODE_MAP_REV,
+} = require('./utils');
 
 function calAge(dob) {
   const now = new Date();
@@ -145,6 +127,148 @@ async function statApp(tuples, startDateTuples) {
 
       if (Reason.toUpperCase().startsWith('MONITOR') === true) {
         stat[Chart].monitorCounter += 1;
+      }
+    }
+  }
+
+  for (let i = 0; i < startDateTuples.recordset.length; i += 1) {
+    const { Chart_Number, StartDate } = startDateTuples.recordset[i];
+    if (Chart_Number in stat) {
+      if (stat[Chart_Number].ivfStartDate < StartDate) {
+        stat[Chart_Number].ivfStartDate = StartDate;
+        stat[Chart_Number].ivfR1 = 'Y';
+      }
+    }
+  }
+
+  return stat;
+}
+
+async function statAppV2(tuples, startDateTuples) {
+  const stat = {};
+  for (let i = 0; i < tuples.recordset.length; i += 1) {
+    // console.log([
+    //   tuples.recordset[i].Birth_Date,
+    //   tuples.recordset[i].Birth_Date.getFullYear(),
+    //   tuples.recordset[i].Birth_Date.getMonth(),
+    //   tuples.recordset[i].Birth_Date.getDate(),
+    // ]);
+    const {
+      Chart,
+      city,
+      State,
+      Birth_Date,
+      Primary_Code,
+      Address_1,
+      Race,
+      Ref_Source,
+      Reason,
+      Status,
+      Appt_Date,
+      MD,
+      First_Name,
+      Last_Name,
+      Home_Email,
+      Home_Phone,
+    } = tuples.recordset[i];
+    if (Chart in stat === false) {
+      stat[Chart] = {
+        city,
+        state: State,
+        reason: [],
+        dob: Birth_Date,
+        age: calAge(Birth_Date),
+        code: Primary_Code,
+        address: Address_1,
+        race: Race,
+        refSource: Ref_Source,
+        iovApptDate: null,
+        iovApptStatus: null,
+        r1ApptDate: null,
+        r1ApptStatus: null,
+        ivfR1: null,
+        ivfStartDate: null,
+        md: null,
+        monitorStatus: [],
+        monitorDate: [],
+        monitor: null,
+        first_monitor_date: null,
+        erStatus: [],
+        erDate: [],
+        er: null,
+        first_er_date: null,
+        transferType: [],
+        transferStatus: [],
+        transferDate: [],
+        transfer: null,
+        first_transfer_date: null,
+        first_transfer_type: null,
+        firstName: First_Name.replace(/\s/g, '').toLowerCase() || '',
+        lastName: Last_Name.replace(/\s/g, '').toLowerCase() || '',
+        email: Home_Email.replace(/\s/g, '').toLowerCase() || '',
+        phone: Home_Phone || '',
+      };
+    }
+
+    stat[Chart].reason.push(Reason);
+    if (typeof Reason === 'string') {
+      if (
+        Reason.toUpperCase().startsWith('IOV') === true &&
+        (stat[Chart].iovApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
+      ) {
+        stat[Chart].iovApptStatus = APPOINTMENT_CODE_MAP[Status];
+        stat[Chart].iovApptDate = Appt_Date;
+        stat[Chart].md = MD;
+      }
+
+      if (
+        Reason.toUpperCase().startsWith('R1') === true &&
+        (stat[Chart].r1ApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
+      ) {
+        stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
+        stat[Chart].r1ApptDate = Appt_Date;
+      }
+
+      if (Reason.toUpperCase().startsWith('ER') === true) {
+        stat[Chart].erDate.push(Appt_Date);
+        if (
+          Status === APPOINTMENT_CODE_MAP_REV.Completed &&
+          stat[Chart].erStatus.indexOf(APPOINTMENT_CODE_MAP[Status]) === -1
+        ) {
+          stat[Chart].er = 'Y';
+          stat[Chart].first_er_date = Appt_Date;
+        }
+        stat[Chart].erStatus.push(APPOINTMENT_CODE_MAP[Status]);
+      }
+
+      if (
+        Reason.toUpperCase().startsWith('MONITOR') === true ||
+        Reason.toUpperCase().startsWith('BLOOD') === true ||
+        Reason.toUpperCase().startsWith('SONO') === true
+      ) {
+        stat[Chart].monitorDate.push(Appt_Date);
+        if (
+          Status === APPOINTMENT_CODE_MAP_REV.Completed &&
+          stat[Chart].monitorStatus.indexOf(APPOINTMENT_CODE_MAP[Status]) === -1
+        ) {
+          stat[Chart].monitor = 'Y';
+          stat[Chart].first_monitor_date = Appt_Date;
+        }
+        stat[Chart].monitorStatus.push(APPOINTMENT_CODE_MAP[Status]);
+      }
+
+      if (Reason.toUpperCase() === 'FET' || Reason.toUpperCase() === 'ET') {
+        stat[Chart].transferDate.push(Appt_Date);
+        stat[Chart].transferType.push(Reason.toUpperCase());
+        if (
+          Status === APPOINTMENT_CODE_MAP_REV.Completed &&
+          stat[Chart].transferStatus.indexOf(APPOINTMENT_CODE_MAP[Status]) === -1
+        ) {
+          stat[Chart].transer = 'Y';
+          stat[Chart].first_transfer_date = Appt_Date;
+          stat[Chart].first_transfer_type = Reason.toUpperCase();
+        }
+        stat[Chart].transferStatus.push(APPOINTMENT_CODE_MAP[Status]);
       }
     }
   }
@@ -350,6 +474,125 @@ async function organizeArrayForDisplayV2(obj) {
   return arrayForDispaly;
 }
 
+async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checkedTransfer) {
+  const arrayForDispaly = [];
+  const arrayForDispalyMonitor = [];
+  const arrayForDispalyER = [];
+  const arrayForDispalyTransfer = [];
+
+  // const columnTitleList = iovR1MainTable;
+  arrayForDispaly.push(iovR1MainTable);
+  arrayForDispalyMonitor.push(iovR1MonitorTable);
+  arrayForDispalyER.push(iovR1ERTable);
+  arrayForDispalyTransfer.push(iovR1TransferTable);
+  //   const chartList = Object.keys(obj);
+  //   console.log(typeof chartList);
+  //   const columnList = Object.keys(obj.chartList[0]);
+  Object.keys(obj).forEach((element) => {
+    // const flagIOV = obj.element.iovApptDate !== null;
+    // const flagIOVCompleted = obj.element.iovApptStatus === APPOINTMENT_CODE_MAP_REV.Completed;
+    // const flagR1, flagR1Completed = obj.element.r1ApptDate !== null;
+    // console.log(obj[element].reason);
+    // console.log(identApptReason(obj[element], 'IOV'));
+    if (identApptReason(obj[element], 'IOV') === true) {
+      const subList = [
+        element,
+        formatUTCDate(obj[element].dob),
+        obj[element].age,
+        obj[element].race,
+        obj[element].code,
+        obj[element].address,
+        obj[element].city,
+        obj[element].state,
+        obj[element].refSource,
+        obj[element].iovApptStatus,
+        formatUTCDate(obj[element].iovApptDate),
+        obj[element].md,
+        obj[element].r1ApptStatus,
+        formatUTCDate(obj[element].r1ApptDate),
+        obj[element].ivfR1,
+        formatUTCDate(obj[element].ivfStartDate),
+        obj[element].monitor,
+        formatUTCDate(obj[element].first_monitor_date),
+        obj[element].er,
+        formatUTCDate(obj[element].first_er_date),
+        obj[element].transfer,
+        obj[element].first_transfer_type,
+        formatUTCDate(obj[element].first_transfer_date),
+      ];
+      arrayForDispaly.push(subList);
+    }
+
+    if (checkedMonitor === 'true' && obj[element].monitorStatus.length > 0) {
+      obj[element].monitorStatus.forEach((ele, i) => {
+        const subList = [
+          element,
+          formatUTCDate(obj[element].dob),
+          obj[element].age,
+          obj[element].race,
+          obj[element].code,
+          obj[element].address,
+          obj[element].city,
+          obj[element].state,
+          obj[element].iovApptStatus === 'Completed' ? obj[element].refSource : '',
+          obj[element].iovApptStatus === 'Completed' ? 'Y' : '',
+          obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].iovApptDate) : '',
+          obj[element].iovApptStatus === 'Completed' ? obj[element].md : '',
+          ele.toUpperCase(),
+          formatUTCDate(obj[element].monitorDate[i]),
+        ];
+        arrayForDispalyMonitor.push(subList);
+      });
+    }
+
+    if (checkedER === 'true' && obj[element].erStatus.length > 0) {
+      obj[element].erStatus.forEach((ele, i) => {
+        const subList = [
+          element,
+          formatUTCDate(obj[element].dob),
+          obj[element].age,
+          obj[element].race,
+          obj[element].code,
+          obj[element].address,
+          obj[element].city,
+          obj[element].state,
+          obj[element].iovApptStatus === 'Completed' ? obj[element].refSource : '',
+          obj[element].iovApptStatus === 'Completed' ? 'Y' : '',
+          obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].iovApptDate) : '',
+          obj[element].iovApptStatus === 'Completed' ? obj[element].md : '',
+          ele.toUpperCase(),
+          formatUTCDate(obj[element].erDate[i]),
+        ];
+        arrayForDispalyER.push(subList);
+      });
+    }
+
+    if (checkedTransfer === 'true' && obj[element].transferStatus.length > 0) {
+      obj[element].transferStatus.forEach((ele, i) => {
+        const subList = [
+          element,
+          formatUTCDate(obj[element].dob),
+          obj[element].age,
+          obj[element].race,
+          obj[element].code,
+          obj[element].address,
+          obj[element].city,
+          obj[element].state,
+          obj[element].iovApptStatus === 'Completed' ? obj[element].refSource : '',
+          obj[element].iovApptStatus === 'Completed' ? 'Y' : '',
+          obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].iovApptDate) : '',
+          obj[element].iovApptStatus === 'Completed' ? obj[element].md : '',
+          ele.toUpperCase(),
+          formatUTCDate(obj[element].transferDate[i]),
+        ];
+        arrayForDispalyTransfer.push(subList);
+      });
+    }
+  });
+
+  return [arrayForDispaly, arrayForDispalyMonitor, arrayForDispalyER, arrayForDispalyTransfer];
+}
+
 async function organizeArrayForCalendly(stats, inviteeList) {
   const arrayForDispaly = [];
   const columnTitleList = [
@@ -401,7 +644,7 @@ async function organizeArrayForCalendly(stats, inviteeList) {
       obj.state,
       realKey ? 'Y' : null,
       realKey ? stats[realKey].iovApptStatus : null,
-      realKey ? formatDate(stats[realKey].iovApptDate) : null,
+      realKey ? formatUTCDate(stats[realKey].iovApptDate) : null,
     ];
     arrayForDispaly.push(subList);
   });
@@ -415,8 +658,10 @@ async function organizeArrayForCalendly(stats, inviteeList) {
 module.exports = {
   getRawTuples,
   statApp,
+  statAppV2,
   statAppForCalendly,
   organizeArrayForDisplay,
   organizeArrayForDisplayV2,
+  organizeArrayForDisplayV3,
   organizeArrayForCalendly,
 };

@@ -5,8 +5,10 @@ const mssql = require('../models/Mssql');
 const { iovStats, startDates } = require('../utils/mssql_cmd');
 const {
   statApp,
+  statAppV2,
   statAppForCalendly,
   organizeArrayForDisplayV2,
+  organizeArrayForDisplayV3,
   organizeArrayForCalendly,
 } = require('../utils/mssql_query');
 const { getEventInvitees } = require('../utils/calendly_api');
@@ -34,7 +36,7 @@ router.use((req, res, next) => {
 
 router.get('/get-iov-r1-spreadsheet', async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, checkedMonitor, checkedER, checkedTransfer } = req.query;
     // console.log([startDate, endDate]);
     const cmdRawTuple = iovStats(startDate, endDate);
     const cmdStartDateTuple = startDates(startDate, endDate);
@@ -42,8 +44,14 @@ router.get('/get-iov-r1-spreadsheet', async (req, res) => {
     const rawTuples = await pool.request().query(cmdRawTuple);
     // console.log(rawTuples);
     const rawStartDateTuples = await pool.request().query(cmdStartDateTuple);
-    const stats = await statApp(rawTuples, rawStartDateTuples);
-    const array = await organizeArrayForDisplayV2(stats);
+    const stats = await statAppV2(rawTuples, rawStartDateTuples);
+    // console.log(stats);
+    const array = await organizeArrayForDisplayV3(
+      stats,
+      checkedMonitor,
+      checkedER,
+      checkedTransfer,
+    );
     // console.log(array);
     res.json(array);
   } catch (err) {

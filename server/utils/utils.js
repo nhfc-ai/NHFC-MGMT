@@ -6,6 +6,34 @@ const nodemailer = require('nodemailer');
 
 require('dotenv').config();
 
+const APPOINTMENT_CODE_MAP = {
+  0: 'Pending',
+  1: 'Confirmed',
+  2: 'Waiting',
+  3: 'BeingSeen',
+  4: 'Completed',
+  5: 'Late',
+  6: 'Missed',
+  7: 'Canceled',
+  8: 'Rescheduled',
+  9: 'Recalled',
+  10: 'Unknown',
+};
+
+const APPOINTMENT_CODE_MAP_REV = {
+  Pending: 0,
+  Confirmed: 1,
+  Waiting: 2,
+  BeingSeen: 3,
+  Completed: 4,
+  Late: 5,
+  Missed: 6,
+  Canceled: 7,
+  Rescheduled: 8,
+  Recalled: 9,
+  Unknown: 10,
+};
+
 const MONTH_NAME = [
   'Jan',
   'Feb',
@@ -36,6 +64,84 @@ const monthNameIndex = new Map([
   ['Dec', 12],
 ]);
 
+const iovR1MainTable = [
+  'Chart',
+  'DOB',
+  'Age',
+  'Race',
+  'Primary_Code',
+  'Address',
+  'City',
+  'State',
+  'Ref_Source',
+  'Latest_IOV_Appt_Status',
+  'Latest_IOV_Appt_Date',
+  'MD',
+  'R1_Appt_Status',
+  'R1_Appt_Date',
+  'IVF_R1',
+  'IVF_Start_Date',
+  'Monitor',
+  'First_Monitor_Appt_Date',
+  'ER',
+  'First_ER_Appt_Date',
+  'Transfer',
+  'First_Transfer_Type',
+  'First_Transfer_Appt_Date',
+];
+
+const iovR1MonitorTable = [
+  'Chart',
+  'DOB',
+  'Age',
+  'Race',
+  'Primary_Code',
+  'Address',
+  'City',
+  'State',
+  'Ref_Source',
+  'IOV?',
+  'IOV_Appt_Date',
+  'IOV MD',
+  'Monitor_Status',
+  'Monitor_Date',
+];
+
+const iovR1ERTable = [
+  'Chart',
+  'DOB',
+  'Age',
+  'Race',
+  'Primary_Code',
+  'Address',
+  'City',
+  'State',
+  'Ref_Source',
+  'IOV?',
+  'IOV_Appt_Date',
+  'IOV MD',
+  'ER_Status',
+  'ER_Date',
+];
+
+const iovR1TransferTable = [
+  'Chart',
+  'DOB',
+  'Age',
+  'Race',
+  'Primary_Code',
+  'Address',
+  'City',
+  'State',
+  'Ref_Source',
+  'IOV?',
+  'IOV_Appt_Date',
+  'IOV MD',
+  'Transfer_Status',
+  'Transfer_Type',
+  'Transfer_Date',
+];
+
 function formatPhoneNumber(phoneNumberString) {
   try {
     if (phoneNumberString.substring(0, 2) === '+1') {
@@ -55,6 +161,21 @@ function formatDate(date) {
     let month = `${date.getMonth() + 1}`;
     let day = `${date.getDate()}`;
     const year = date.getFullYear();
+
+    if (month.length < 2) month = `0${month}`;
+    if (day.length < 2) day = `0${day}`;
+
+    return [year, month, day].join('-');
+  } catch (err) {
+    return null;
+  }
+}
+
+function formatUTCDate(date) {
+  try {
+    let month = `${date.getUTCMonth() + 1}`;
+    let day = `${date.getUTCDate()}`;
+    const year = date.getUTCFullYear();
 
     if (month.length < 2) month = `0${month}`;
     if (day.length < 2) day = `0${day}`;
@@ -604,8 +725,15 @@ module.exports = {
   getUTCTimeRangeByCalenderMonth,
   getLocalTimeRangeByCalenderMonth,
   formatDate,
+  formatUTCDate,
   formatPhoneNumber,
   getState,
   getTodayInNextYear,
   organizeCalendlyFullModeData,
+  iovR1MainTable,
+  iovR1MonitorTable,
+  iovR1ERTable,
+  iovR1TransferTable,
+  APPOINTMENT_CODE_MAP,
+  APPOINTMENT_CODE_MAP_REV,
 };

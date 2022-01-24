@@ -9,17 +9,23 @@ import { formatDate } from '../../lib/utils';
 // import { styleTextField } from '../../components/SharedStyles';
 
 class IOV extends React.Component {
-  setDateOnSave = async (startDate, endDate) => {
+  setDateOnSave = async (startDate, endDate, checkedMonitor, checkedER, checkedTransfer) => {
     NProgress.start();
     try {
-      console.log([formatDate(startDate), formatDate(endDate)]);
+      console.log([
+        formatDate(startDate),
+        formatDate(endDate),
+        checkedMonitor,
+        checkedER,
+        checkedTransfer,
+      ]);
       Router.push(
         `/mgmt/iov-r1-spreadsheet?startDate=${formatDate(startDate)}&endDate=${formatDate(
           endDate,
-        )}`,
+        )}&checkedMonitor=${checkedMonitor}&checkedER=${checkedER}&checkedTransfer=${checkedTransfer}`,
         `/mgmt/iov-r1-spreadsheet?startDate=${formatDate(startDate)}&endDate=${formatDate(
           endDate,
-        )}`,
+        )}&checkedMonitor=${checkedMonitor}&checkedER=${checkedER}&checkedTransfer=${checkedTransfer}`,
       );
       // Router.push(`www.google.com`, `www.google.com`);
       NProgress.done();

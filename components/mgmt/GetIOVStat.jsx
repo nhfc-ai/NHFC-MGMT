@@ -5,6 +5,9 @@ import TextField from '@material-ui/core/TextField';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 // import { getGithubReposApiMethod } from '../../lib/api/admin';
 // import { styleTextField } from '../SharedStyles';
@@ -17,6 +20,36 @@ const propTypes = {
 function GetIOVStats(props) {
   const [startDate, setStartDate] = React.useState(null);
   const [endDate, setEndDate] = React.useState(null);
+  const [state, setState] = React.useState({
+    checkedMonitor: false,
+    checkedER: false,
+    checkedTransfer: false,
+  });
+
+  // const [checkedMonitor, setCheckedMonitor] = React.useState(true);
+  // const [checkedER, setCheckedER] = React.useState(true);
+  // const [checkedTransfer, setCheckedTransfer] = React.useState(true);
+
+  // const handleChangeMonitor = (event) => {
+  //   setCheckedMonitor(event.target.checkedMonitor);
+  // };
+
+  // const handleChangeER = (event) => {
+  //   setCheckedER(event.target.checkedER);
+  // };
+
+  // const handleChangeTransfer = (event) => {
+  //   setCheckedTransfer(event.target.checkedTranser);
+  // };
+
+  const handleChange = (event) => {
+    setState({
+      ...state,
+      [event.target.name]: event.target.checked,
+    });
+  };
+
+  const { checkedMonitor, checkedER, checkedTransfer } = state;
 
   return (
     <div style={{ padding: '10px 45px' }}>
@@ -57,7 +90,7 @@ function GetIOVStats(props) {
             return;
           }
 
-          props.onSave(startDate, endDate);
+          props.onSave(startDate, endDate, checkedMonitor, checkedER, checkedTransfer);
         }}
       >
         <br />
@@ -71,9 +104,7 @@ function GetIOVStats(props) {
               }}
               renderInput={(params) => <TextField {...params} />}
             />
-          </LocalizationProvider>
-          <br />
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <br />
             <DatePicker
               label="End Date"
               value={endDate}
@@ -82,6 +113,41 @@ function GetIOVStats(props) {
               }}
               renderInput={(params) => <TextField {...params} />}
             />
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={checkedMonitor}
+                    onChange={handleChange}
+                    inputProps={{ 'aria-label': 'controlled' }}
+                    name="checkedMonitor"
+                  />
+                }
+                label="Pull Full Monitor Appts?"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={checkedER}
+                    onChange={handleChange}
+                    inputProps={{ 'aria-label': 'controlled' }}
+                    name="checkedER"
+                  />
+                }
+                label="Pull Full ER Appts?"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={checkedTransfer}
+                    onChange={handleChange}
+                    inputProps={{ 'aria-label': 'controlled' }}
+                    name="checkedTransfer"
+                  />
+                }
+                label="Pull Full Transfer Appts?"
+              />
+            </FormGroup>
           </LocalizationProvider>
         </div>
         <br />

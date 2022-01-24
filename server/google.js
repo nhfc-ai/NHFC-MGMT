@@ -8,6 +8,7 @@ const {
   organizeIovR1DataForChart,
   organizeCalendlyFullModeData,
   sendEmail,
+  iovR1MainTable,
 } = require('./utils/utils');
 
 const User = require('./models/User');
@@ -211,6 +212,8 @@ function setupGoogle({ server, ROOT_URL }) {
       //
       const userObj = await User.findByPk(req.user.id);
 
+      const { checkedMonitor, checkedER, checkedTransfer } = req.body;
+
       const oauth2Client = new OAuth2Client(
         process.env.GOOGLE_CLIENTID,
         process.env.GOOGLE_CLIENTSECRET,
@@ -255,22 +258,26 @@ function setupGoogle({ server, ROOT_URL }) {
       //
       // end of create blank spreadsheet
       //
-
+      // console.log(req.body.array);
+      const [arrayMain, arrayMonitor, arrayER, arrayTransfer] = req.body.array;
+      // console.log([arrayMain.length, arrayMonitor.length, arrayER.length, arrayTransfer.length]);
       //
       // inject spreadsheet data
       //
       // main data
-      const columnList = req.body.array[0];
+
+      const columnList = arrayMain[0];
+
       const lastColumn = convertIntegerToCapLetter(columnList.length);
 
-      const dataRange = `Main Table!A1:${lastColumn}${req.body.array.length}`;
+      const dataRange = `Main Table!A1:${lastColumn}${arrayMain.length}`;
 
       for (let i = 0; i < dateColumns.length; i += 1) {
         requests.push({
           repeatCell: {
             range: {
               startRowIndex: 1,
-              endRowIndex: req.body.array.length - 1,
+              endRowIndex: arrayMain.length - 1,
               startColumnIndex: columnList.indexOf(dateColumns[i]),
               endColumnIndex: columnList.indexOf(dateColumns[i]) + 1,
             },
@@ -289,7 +296,7 @@ function setupGoogle({ server, ROOT_URL }) {
 
       // chart data
 
-      const chartData2dArray = await organizeIovR1DataForChart(req.body.array);
+      const chartData2dArray = await organizeIovR1DataForChart(arrayMain);
       // console.log(chartData2dArray);
       const chartColumnList = chartData2dArray[0];
       const chartLastColumn = convertIntegerToCapLetter(chartColumnList.length);
@@ -302,7 +309,7 @@ function setupGoogle({ server, ROOT_URL }) {
             {
               range: dataRange,
               majorDimension: 'ROWS',
-              values: req.body.array,
+              values: arrayMain,
             },
             { range: chartDataRange, majorDimension: 'ROWS', values: chartData2dArray },
           ],
@@ -396,6 +403,72 @@ function setupGoogle({ server, ROOT_URL }) {
         },
       });
       //
+
+      // for Moniter sheet
+      if (checkedMonitor === 'true') {
+        const arrayMonitorColumnList = arrayMonitor[0];
+        const arrayMonitorLastColumn = convertIntegerToCapLetter(arrayMonitorColumnList.length);
+        const arrayMonitorTitle = 'Monitor Appt Table';
+        requests.push({
+          addSheet: {
+            properties: {
+              sheetId: 2,
+              title: arrayMonitorTitle,
+            },
+          },
+        });
+        const arrayMonitorDataRange = `${arrayMonitorTitle}!A1:${arrayMonitorLastColumn}${arrayMonitor.length}`;
+        valuesBody.resource.data.push({
+          range: arrayMonitorDataRange,
+          majorDimension: 'ROWS',
+          values: arrayMonitor,
+        });
+      }
+      // end of Moniter sheet
+
+      // for ER sheet
+      if (checkedER === 'true') {
+        const arrayERColumnList = arrayER[0];
+        const arrayERLastColumn = convertIntegerToCapLetter(arrayERColumnList.length);
+        const arrayERTitle = 'ER Appt Table';
+        requests.push({
+          addSheet: {
+            properties: {
+              sheetId: 3,
+              title: arrayERTitle,
+            },
+          },
+        });
+        const arrayERDataRange = `${arrayERTitle}!A1:${arrayERLastColumn}${arrayER.length}`;
+        valuesBody.resource.data.push({
+          range: arrayERDataRange,
+          majorDimension: 'ROWS',
+          values: arrayER,
+        });
+      }
+      // end of ER sheet
+
+      // for Transfer sheet
+      if (checkedTransfer === 'true') {
+        const arrayTransferColumnList = arrayTransfer[0];
+        const arrayTransferLastColumn = convertIntegerToCapLetter(arrayTransferColumnList.length);
+        const arrayTransferTitle = 'Transfer Appt Table';
+        requests.push({
+          addSheet: {
+            properties: {
+              sheetId: 4,
+              title: arrayTransferTitle,
+            },
+          },
+        });
+        const arrayTransferDataRange = `${arrayTransferTitle}!A1:${arrayTransferLastColumn}${arrayTransfer.length}`;
+        valuesBody.resource.data.push({
+          range: arrayTransferDataRange,
+          majorDimension: 'ROWS',
+          values: arrayTransfer,
+        });
+      }
+      // end of Transfer sheet
 
       const sheetBody = {
         resource: { requests },

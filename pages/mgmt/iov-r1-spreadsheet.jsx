@@ -68,10 +68,23 @@ const { getIovR1DataApiMethod, createGoogleSpreadsheet } = require('../../lib/ap
 
 class RedirectGoogleSheet extends React.Component {
   static async getInitialProps(ctx) {
-    const { startDate, endDate } = ctx.query;
-    const array = await getIovR1DataApiMethod({ startDate, endDate });
+    const { startDate, endDate, checkedMonitor, checkedER, checkedTransfer } = ctx.query;
+    const array = await getIovR1DataApiMethod({
+      startDate,
+      endDate,
+      checkedMonitor,
+      checkedER,
+      checkedTransfer,
+    });
     // console.log(array);
-    const spreadData = await createGoogleSpreadsheet({ startDate, endDate, array });
+    const spreadData = await createGoogleSpreadsheet({
+      startDate,
+      endDate,
+      array,
+      checkedMonitor,
+      checkedER,
+      checkedTransfer,
+    });
     // console.log(array);
     // console.log(spreadData);
     return { spreadID: spreadData.spreadsheetId };
