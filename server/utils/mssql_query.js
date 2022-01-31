@@ -7,6 +7,7 @@ const {
   iovR1MonitorTable,
   iovR1ERTable,
   iovR1TransferTable,
+  r1CodeList,
   APPOINTMENT_CODE_MAP,
   APPOINTMENT_CODE_MAP_REV,
 } = require('./utils');
@@ -185,8 +186,8 @@ async function statAppV2(tuples, startDateTuples) {
         iovApptDate: null,
         iovApptStatus: null,
         r1ApptDate: null,
-        r1ApptStatus: null,
-        ivfR1: null,
+        r1ApptStatus: '',
+        ivfR1: '',
         ivfStartDate: null,
         md: null,
         monitorStatus: [],
@@ -221,12 +222,12 @@ async function statAppV2(tuples, startDateTuples) {
         stat[Chart].md = MD;
       }
 
-      if (
-        Reason.toUpperCase().startsWith('R1') === true &&
-        (stat[Chart].r1ApptDate <= Appt_Date || Status === APPOINTMENT_CODE_MAP_REV.Completed)
-      ) {
-        stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
-        stat[Chart].r1ApptDate = Appt_Date;
+      // R1 codes are messed. check r1CodeList for more info
+      if (stat[Chart].iovApptStatus === 'Completed' && stat[Chart].r1ApptStatus !== 'Completed') {
+        if (r1CodeList.indexOf(Reason) !== -1) {
+          stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
+          stat[Chart].r1ApptDate = Appt_Date;
+        }
       }
 
       if (Reason.toUpperCase().startsWith('ER') === true) {
@@ -264,7 +265,7 @@ async function statAppV2(tuples, startDateTuples) {
           Status === APPOINTMENT_CODE_MAP_REV.Completed &&
           stat[Chart].transferStatus.indexOf(APPOINTMENT_CODE_MAP[Status]) === -1
         ) {
-          stat[Chart].transer = 'Y';
+          stat[Chart].transfer = 'Y';
           stat[Chart].first_transfer_date = Appt_Date;
           stat[Chart].first_transfer_type = Reason.toUpperCase();
         }

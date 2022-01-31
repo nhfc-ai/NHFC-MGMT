@@ -142,6 +142,42 @@ const iovR1TransferTable = [
   'Transfer_Date',
 ];
 
+const r1CodeList = [
+  'R1',
+  'R1MAKA',
+  'MONITOR',
+  'R1OM',
+  'OM',
+  'SCANMAKA',
+  'HSG',
+  'ZEITHSG',
+  'GENCOUNS',
+  'ZHANGCOUR',
+  'OVAREJ',
+  'ENDOSMAKA',
+  'SCREENFEM',
+  'WATERSONO',
+  'ZEITCOURT',
+  'IUI',
+  'HYSTODC',
+  'BLOOD',
+  'DONORFU',
+  'INJECTION',
+  'SCANZEIT',
+  'MONMTZHAN',
+  'MONITORBK',
+  'BHCG',
+  'SIS',
+  'SF',
+  'ER',
+  'ENDO',
+  'PGDSIGN',
+  'SA',
+  'DARCON',
+  'PAPSMEAR',
+  'PRP',
+];
+
 function formatPhoneNumber(phoneNumberString) {
   try {
     if (phoneNumberString.substring(0, 2) === '+1') {
@@ -441,32 +477,49 @@ async function organizeIovR1DataForChart(twodArray, interval) {
   const iovCountDf = await statDataByTime(iovDf, 'Latest_IOV_Appt_Date', 'monthly');
   iovCountDf.rename({ mapper: { Latest_IOV_Appt_Date_count: 'IOV_count' }, inplace: true });
 
+  const R1Df = await filterDataByColumn(twodArray, 'R1_Appt_Status', 'full', 'Completed');
+  const R1CountDf = await statDataByTime(R1Df, 'R1_Appt_Date', 'monthly');
+  R1CountDf.rename({ mapper: { R1_Appt_Date_count: 'R1_count' }, inplace: true });
+
   const ivfR1Df = await filterDataByColumn(twodArray, 'IVF_R1', 'full', 'Y');
   const ivfR1CountDf = await statDataByTime(ivfR1Df, 'IVF_Start_Date', 'monthly');
   ivfR1CountDf.rename({ mapper: { IVF_Start_Date_count: 'IVF_R1_count' }, inplace: true });
 
-  const innerJoinDf = dfd.merge({
+  const innerJoinDfA = dfd.merge({
+    left: iovCountDf,
+    right: R1CountDf,
+    on: ['year', 'month'],
+    how: 'inner',
+  });
+
+  const innerJoinDfB = dfd.merge({
     left: iovCountDf,
     right: ivfR1CountDf,
     on: ['year', 'month'],
     how: 'inner',
   });
+
   // innerJoinDf.print();
-  innerJoinDf.addColumn({
+  innerJoinDfA.addColumn({
     column: 'month+year',
-    values: innerJoinDf.month.str.concat(innerJoinDf.year.astype('string').values, 1).values,
+    values: innerJoinDfA.month.str.concat(innerJoinDfA.year.astype('string').values, 1).values,
+    inplace: true,
+  });
+  innerJoinDfA.addColumn({
+    column: 'IVF_R1_count',
+    values: innerJoinDfB.IVF_R1_count.values,
     inplace: true,
   });
   // innerJoinDf.print();
-  const returnArray = innerJoinDf.loc({
-    columns: ['month+year', 'IOV_count', 'IVF_R1_count'],
+  const returnArray = innerJoinDfA.loc({
+    columns: ['month+year', 'IOV_count', 'R1_count', 'IVF_R1_count'],
   }).values;
 
-  const indexArray = reorderCalendarMonths(innerJoinDf['month+year'].values);
+  const indexArray = reorderCalendarMonths(innerJoinDfA['month+year'].values);
   // console.log(indexArray);
 
   const sortedReturnArray = indexArray.map((i) => returnArray[i]);
-  sortedReturnArray.unshift(['month+year', 'IOV_count', 'IVF_R1_count']);
+  sortedReturnArray.unshift(['month+year', 'IOV_count', 'R1_count', 'IVF_R1_count']);
   return sortedReturnArray;
 }
 
@@ -734,6 +787,7 @@ module.exports = {
   iovR1MonitorTable,
   iovR1ERTable,
   iovR1TransferTable,
+  r1CodeList,
   APPOINTMENT_CODE_MAP,
   APPOINTMENT_CODE_MAP_REV,
 };

@@ -1,5 +1,6 @@
 const passport = require('passport');
-const Strategy = require('passport-google-oauth').OAuth2Strategy;
+// const googleStrategy = require('passport-google').Strategy;
+const { Strategy } = require('passport-google-oauth2');
 const { OAuth2Client } = require('google-auth-library');
 const { google } = require('googleapis');
 const { dateColumns } = require('./utils/mssql_cmd');
@@ -15,7 +16,7 @@ const User = require('./models/User');
 const { Group } = require('./models/Group');
 
 function setupGoogle({ server, ROOT_URL }) {
-  const verify = async (accessToken, refreshToken, profile, verified) => {
+  const verify = async (request, accessToken, refreshToken, profile, verified) => {
     let email;
     let avatarUrl;
 
@@ -60,6 +61,7 @@ function setupGoogle({ server, ROOT_URL }) {
         clientID: process.env.GOOGLE_CLIENTID,
         clientSecret: process.env.GOOGLE_CLIENTSECRET,
         callbackURL: `${ROOT_URL}/oauth2callback`,
+        passReqToCallback: true,
       },
       verify,
     ),
@@ -92,8 +94,8 @@ function setupGoogle({ server, ROOT_URL }) {
     '/auth/google',
     passport.authenticate('google', {
       scope: [
-        'profile',
-        'email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/gmail.send',
         'https://mail.google.com/',
@@ -101,8 +103,8 @@ function setupGoogle({ server, ROOT_URL }) {
         'https://www.googleapis.com/auth/gmail.readonly',
         'https://www.googleapis.com/auth/gmail.compose',
       ],
-      prompt: 'select_account',
-      access_type: 'offline',
+      prompt: 'consent',
+      accessType: 'offline',
     }),
   );
 
@@ -380,6 +382,22 @@ function setupGoogle({ server, ROOT_URL }) {
                             endRowIndex: chartData2dArray.length,
                             startColumnIndex: 2,
                             endColumnIndex: 3,
+                          },
+                        ],
+                      },
+                    },
+                    targetAxis: 'LEFT_AXIS',
+                  },
+                  {
+                    series: {
+                      sourceRange: {
+                        sources: [
+                          {
+                            sheetId: 1,
+                            startRowIndex: 0,
+                            endRowIndex: chartData2dArray.length,
+                            startColumnIndex: 3,
+                            endColumnIndex: 4,
                           },
                         ],
                       },
