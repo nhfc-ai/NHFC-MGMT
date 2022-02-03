@@ -584,6 +584,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
           obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].iovApptDate) : '',
           obj[element].iovApptStatus === 'Completed' ? obj[element].md : '',
           ele.toUpperCase(),
+          obj[element].transferType[i].toUpperCase(),
           formatUTCDate(obj[element].transferDate[i]),
         ];
         arrayForDispalyTransfer.push(subList);
