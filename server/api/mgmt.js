@@ -2,7 +2,7 @@ const express = require('express');
 // const cors = require('cors');
 const mssql = require('../models/Mssql');
 
-const { iovStats, startDates } = require('../utils/mssql_cmd');
+const { iovStats, iovStatsV2, startDates } = require('../utils/mssql_cmd');
 const {
   statApp,
   statAppV2,
@@ -38,7 +38,7 @@ router.get('/get-iov-r1-spreadsheet', async (req, res) => {
   try {
     const { startDate, endDate, checkedMonitor, checkedER, checkedTransfer } = req.query;
     // console.log([startDate, endDate]);
-    const cmdRawTuple = iovStats(startDate, endDate);
+    const cmdRawTuple = iovStatsV2(startDate, endDate);
     const cmdStartDateTuple = startDates(startDate, endDate);
     const pool = await mssql;
     const rawTuples = await pool.request().query(cmdRawTuple);

@@ -7,6 +7,7 @@ const {
   iovR1MonitorTable,
   iovR1ERTable,
   iovR1TransferTable,
+  R1FollowUpTable,
   r1CodeList,
   APPOINTMENT_CODE_MAP,
   APPOINTMENT_CODE_MAP_REV,
@@ -167,6 +168,7 @@ async function statAppV2(tuples, startDateTuples) {
       Status,
       Appt_Date,
       MD,
+      Provider,
       First_Name,
       Last_Name,
       Home_Email,
@@ -187,6 +189,7 @@ async function statAppV2(tuples, startDateTuples) {
         iovApptStatus: null,
         r1ApptDate: null,
         r1ApptStatus: '',
+        r1Provider: '',
         ivfR1: '',
         ivfStartDate: null,
         md: null,
@@ -227,6 +230,7 @@ async function statAppV2(tuples, startDateTuples) {
         if (r1CodeList.indexOf(Reason) !== -1) {
           stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
           stat[Chart].r1ApptDate = Appt_Date;
+          stat[Chart].r1Provider = Provider;
         }
       }
 
@@ -511,6 +515,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
         obj[element].md,
         obj[element].r1ApptStatus,
         formatUTCDate(obj[element].r1ApptDate),
+        obj[element].r1Provider,
         obj[element].ivfR1,
         formatUTCDate(obj[element].ivfStartDate),
         obj[element].monitor,
