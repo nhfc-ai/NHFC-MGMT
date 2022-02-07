@@ -515,7 +515,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
         obj[element].md,
         obj[element].r1ApptStatus,
         formatUTCDate(obj[element].r1ApptDate),
-        obj[element].r1Provider,
+        obj[element].r1Provider.replace(/^CC/gi, '').toUpperCase() || '',
         obj[element].ivfR1,
         formatUTCDate(obj[element].ivfStartDate),
         obj[element].monitor,
