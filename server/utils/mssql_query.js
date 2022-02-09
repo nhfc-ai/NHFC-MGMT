@@ -530,6 +530,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
     }
 
     if (checkedMonitor === 'true' && obj[element].monitorStatus.length > 0) {
+      let returnVisitFlag = false;
       obj[element].monitorStatus.forEach((ele, i) => {
         const subList = [
           element,
@@ -544,9 +545,27 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
           obj[element].iovApptStatus === 'Completed' ? 'Y' : '',
           obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].iovApptDate) : '',
           obj[element].iovApptStatus === 'Completed' ? obj[element].md : '',
+          obj[element].iovApptStatus === 'Completed' ? obj[element].r1ApptStatus : '',
+          obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].r1ApptDate) : '',
+          obj[element].iovApptStatus === 'Completed'
+            ? obj[element].r1Provider.replace(/^CC/gi, '').toUpperCase() || ''
+            : '',
           ele.toUpperCase(),
           formatUTCDate(obj[element].monitorDate[i]),
+          obj[element].iovApptStatus === 'Completed' &&
+          obj[element].monitorDate[i] > obj[element].r1ApptDate &&
+          returnVisitFlag === false &&
+          ele === 'Completed'
+            ? 'Y'
+            : '',
         ];
+        if (
+          obj[element].monitorDate[i] > obj[element].r1ApptDate &&
+          returnVisitFlag === false &&
+          ele === 'Completed'
+        ) {
+          returnVisitFlag = true;
+        }
         arrayForDispalyMonitor.push(subList);
       });
     }

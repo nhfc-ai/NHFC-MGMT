@@ -104,8 +104,12 @@ const iovR1MonitorTable = [
   'IOV?',
   'IOV_Appt_Date',
   'IOV MD',
+  'R1_Appt_Status',
+  'R1_Appt_Date',
+  'R1 Provider',
   'Monitor_Status',
   'Monitor_Date',
+  'Return Visit?',
 ];
 
 const iovR1ERTable = [
