@@ -249,7 +249,9 @@ async function statAppV2(tuples, startDateTuples) {
       if (
         Reason.toUpperCase().startsWith('MONITOR') === true ||
         Reason.toUpperCase().startsWith('BLOOD') === true ||
-        Reason.toUpperCase().startsWith('SONO') === true
+        Reason.toUpperCase().startsWith('SONO') === true ||
+        Reason.toUpperCase().startsWith('SCAN') === true ||
+        Reason.toUpperCase().startsWith('WATERSONO') === true
       ) {
         stat[Chart].monitorDate.push(Appt_Date);
         if (
