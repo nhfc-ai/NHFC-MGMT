@@ -110,6 +110,7 @@ const iovR1MonitorTable = [
   'Monitor_Status',
   'Monitor_Date',
   'Return Visit?',
+  'Days of Interval',
 ];
 
 const iovR1ERTable = [
@@ -195,6 +196,10 @@ function formatPhoneNumber(phoneNumberString) {
   } catch (err) {
     return '';
   }
+}
+
+function dateDiff(first, second) {
+  return Math.round((second - first) / (1000 * 60 * 60 * 24));
 }
 
 function formatDate(date) {
@@ -788,6 +793,7 @@ module.exports = {
   getState,
   getTodayInNextYear,
   organizeCalendlyFullModeData,
+  dateDiff,
   iovR1MainTable,
   iovR1MonitorTable,
   iovR1ERTable,

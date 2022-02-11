@@ -3,6 +3,7 @@ const {
   formatPhoneNumber,
   formatDate,
   formatUTCDate,
+  dateDiff,
   iovR1MainTable,
   iovR1MonitorTable,
   iovR1ERTable,
@@ -559,6 +560,12 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
           returnVisitFlag === false &&
           ele === 'Completed'
             ? 'Y'
+            : '',
+          obj[element].iovApptStatus === 'Completed' &&
+          obj[element].monitorDate[i] > obj[element].r1ApptDate &&
+          returnVisitFlag === false &&
+          ele === 'Completed'
+            ? dateDiff(obj[element].r1ApptDate, obj[element].monitorDate[i]) || ''
             : '',
         ];
         if (
