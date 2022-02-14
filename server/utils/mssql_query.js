@@ -580,20 +580,20 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
           ele.toUpperCase(),
           formatUTCDate(obj[element].monitorDate[i]),
           obj[element].iovApptStatus === 'Completed' &&
-          obj[element].monitorDate[i] > obj[element].r1ApptDate &&
+          obj[element].monitorDate[i] > r1ApptDate &&
           returnVisitFlag === false &&
           ele === 'Completed'
             ? 'Y'
             : '',
           obj[element].iovApptStatus === 'Completed' &&
-          obj[element].monitorDate[i] > obj[element].r1ApptDate &&
+          obj[element].monitorDate[i] > r1ApptDate &&
           returnVisitFlag === false &&
           ele === 'Completed'
-            ? dateDiff(obj[element].r1ApptDate, obj[element].monitorDate[i]) || ''
+            ? dateDiff(r1ApptDate, obj[element].monitorDate[i]) || ''
             : '',
         ];
         if (
-          obj[element].monitorDate[i] > obj[element].r1ApptDate &&
+          obj[element].monitorDate[i] > r1ApptDate &&
           returnVisitFlag === false &&
           ele === 'Completed'
         ) {
