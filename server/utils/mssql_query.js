@@ -188,9 +188,9 @@ async function statAppV2(tuples, startDateTuples) {
         refSource: Ref_Source,
         iovApptDate: null,
         iovApptStatus: null,
-        r1ApptDate: null,
-        r1ApptStatus: '',
-        r1Provider: '',
+        r1ApptDate: [],
+        r1ApptStatus: [],
+        r1Provider: [],
         ivfR1: '',
         ivfStartDate: null,
         md: null,
@@ -227,11 +227,15 @@ async function statAppV2(tuples, startDateTuples) {
       }
 
       // R1 codes are messed. check r1CodeList for more info
-      if (stat[Chart].iovApptStatus === 'Completed' && stat[Chart].r1ApptStatus !== 'Completed') {
+      const r1Index = stat[Chart].r1ApptStatus.length - 1;
+      if (
+        stat[Chart].iovApptStatus === 'Completed' &&
+        stat[Chart].r1ApptStatus[r1Index] !== 'Completed'
+      ) {
         if (r1CodeList.indexOf(Reason) !== -1) {
-          stat[Chart].r1ApptStatus = APPOINTMENT_CODE_MAP[Status];
-          stat[Chart].r1ApptDate = Appt_Date;
-          stat[Chart].r1Provider = Provider;
+          stat[Chart].r1ApptStatus.push(APPOINTMENT_CODE_MAP[Status]);
+          stat[Chart].r1ApptDate.push(Appt_Date);
+          stat[Chart].r1Provider.push(Provider);
         }
       }
 
@@ -502,7 +506,28 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
     // const flagR1, flagR1Completed = obj.element.r1ApptDate !== null;
     // console.log(obj[element].reason);
     // console.log(identApptReason(obj[element], 'IOV'));
+    let r1ApptStatus = '';
+    let r1ApptDate = '';
+    let r1Provider = '';
+    let r1CompletedInterval = '';
     if (identApptReason(obj[element], 'IOV') === true) {
+      if (obj[element].r1ApptStatus.length === 1) {
+        [r1ApptStatus] = obj[element].r1ApptStatus;
+        [r1ApptDate] = obj[element].r1ApptDate;
+        r1Provider = obj[element].r1Provider[0].replace(/^CC/gi, '').toUpperCase() || '';
+        r1CompletedInterval = r1ApptStatus === 'Completed' ? 0 : '';
+      }
+
+      if (obj[element].r1ApptStatus.length > 1) {
+        const r1Index = obj[element].r1ApptStatus.length - 1;
+        r1ApptStatus = obj[element].r1ApptStatus[r1Index];
+        r1ApptDate = obj[element].r1ApptDate[r1Index];
+        r1Provider = obj[element].r1Provider[r1Index].replace(/^CC/gi, '').toUpperCase() || '';
+        r1CompletedInterval =
+          r1ApptStatus === 'Completed'
+            ? dateDiff(obj[element].r1ApptDate[0], obj[element].r1ApptDate[r1Index]) || ''
+            : '';
+      }
       const subList = [
         element,
         formatUTCDate(obj[element].dob),
@@ -516,9 +541,10 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
         obj[element].iovApptStatus,
         formatUTCDate(obj[element].iovApptDate),
         obj[element].md,
-        obj[element].r1ApptStatus,
-        formatUTCDate(obj[element].r1ApptDate),
-        obj[element].r1Provider.replace(/^CC/gi, '').toUpperCase() || '',
+        r1ApptStatus,
+        formatUTCDate(r1ApptDate),
+        r1Provider,
+        r1CompletedInterval,
         obj[element].ivfR1,
         formatUTCDate(obj[element].ivfStartDate),
         obj[element].monitor,
@@ -548,11 +574,9 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
           obj[element].iovApptStatus === 'Completed' ? 'Y' : '',
           obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].iovApptDate) : '',
           obj[element].iovApptStatus === 'Completed' ? obj[element].md : '',
-          obj[element].iovApptStatus === 'Completed' ? obj[element].r1ApptStatus : '',
-          obj[element].iovApptStatus === 'Completed' ? formatUTCDate(obj[element].r1ApptDate) : '',
-          obj[element].iovApptStatus === 'Completed'
-            ? obj[element].r1Provider.replace(/^CC/gi, '').toUpperCase() || ''
-            : '',
+          obj[element].iovApptStatus === 'Completed' ? r1ApptStatus : '',
+          obj[element].iovApptStatus === 'Completed' ? formatUTCDate(r1ApptDate) : '',
+          obj[element].iovApptStatus === 'Completed' ? r1Provider : '',
           ele.toUpperCase(),
           formatUTCDate(obj[element].monitorDate[i]),
           obj[element].iovApptStatus === 'Completed' &&
