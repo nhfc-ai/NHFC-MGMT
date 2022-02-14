@@ -227,7 +227,7 @@ async function statAppV2(tuples, startDateTuples) {
       }
 
       // R1 codes are messed. check r1CodeList for more info
-      const r1Index = stat[Chart].r1ApptStatus.length - 1;
+      const r1Index = stat[Chart].r1ApptStatus.length > 0 ? stat[Chart].r1ApptStatus.length - 1 : 0;
       if (
         stat[Chart].iovApptStatus === 'Completed' &&
         stat[Chart].r1ApptStatus[r1Index] !== 'Completed'
@@ -525,7 +525,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
         r1Provider = obj[element].r1Provider[r1Index].replace(/^CC/gi, '').toUpperCase() || '';
         r1CompletedInterval =
           r1ApptStatus === 'Completed'
-            ? dateDiff(obj[element].r1ApptDate[0], obj[element].r1ApptDate[r1Index]) || ''
+            ? dateDiff(obj[element].r1ApptDate[0], obj[element].r1ApptDate[r1Index])
             : '';
       }
       const subList = [
