@@ -2,10 +2,11 @@ const express = require('express');
 // const cors = require('cors');
 const mssql = require('../models/Mssql');
 
-const { iovStats, iovStatsV2, startDates } = require('../utils/mssql_cmd');
+const { iovStats, iovStatsV2, startDates, refSourceCodes } = require('../utils/mssql_cmd');
 const {
   statApp,
   statAppV2,
+  statAppV3,
   statAppForCalendly,
   organizeArrayForDisplayV2,
   organizeArrayForDisplayV3,
@@ -40,11 +41,13 @@ router.get('/get-iov-r1-spreadsheet', async (req, res) => {
     // console.log([startDate, endDate]);
     const cmdRawTuple = iovStatsV2(startDate, endDate);
     const cmdStartDateTuple = startDates(startDate, endDate);
+    const cmdRefSourceCodesTuple = refSourceCodes();
     const pool = await mssql;
     const rawTuples = await pool.request().query(cmdRawTuple);
     // console.log(rawTuples);
     const rawStartDateTuples = await pool.request().query(cmdStartDateTuple);
-    const stats = await statAppV2(rawTuples, rawStartDateTuples);
+    const rawRefSourceCodesTuples = await pool.request().query(cmdRefSourceCodesTuple);
+    const stats = await statAppV3(rawTuples, rawStartDateTuples, rawRefSourceCodesTuples);
     // console.log(stats);
     const array = await organizeArrayForDisplayV3(
       stats,

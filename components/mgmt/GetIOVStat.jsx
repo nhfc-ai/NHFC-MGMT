@@ -85,7 +85,12 @@ function GetIOVStats(props) {
             return;
           }
 
-          if ((endDate - startDate) / (1000 * 3600 * 24) < 27) {
+          // if ((endDate - startDate) / (1000 * 3600 * 24) < 27) {
+          //   notify('Date Range Should Be Longer Than One Month');
+          //   return;
+          // }
+
+          if (endDate <= startDate) {
             notify('Date Range Should Be Longer Than One Month');
             return;
           }

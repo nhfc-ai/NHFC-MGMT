@@ -58,8 +58,8 @@ function setupGoogle({ server, ROOT_URL }) {
   passport.use(
     new Strategy(
       {
-        clientID: process.env.GOOGLE_CLIENTID,
-        clientSecret: process.env.GOOGLE_CLIENTSECRET,
+        clientID: process.env.GOOGLE_DEV_CLIENTID,
+        clientSecret: process.env.GOOGLE_DEV_CLIENTSECRET,
         callbackURL: `${ROOT_URL}/oauth2callback`,
         passReqToCallback: true,
       },
@@ -217,8 +217,8 @@ function setupGoogle({ server, ROOT_URL }) {
       const { checkedMonitor, checkedER, checkedTransfer } = req.body;
 
       const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENTID,
-        process.env.GOOGLE_CLIENTSECRET,
+        process.env.GOOGLE_DEV_CLIENTID,
+        process.env.GOOGLE_DEV_CLIENTSECRET,
         `${ROOT_URL}/oauth2callback`,
       );
 
@@ -247,14 +247,14 @@ function setupGoogle({ server, ROOT_URL }) {
             fields: 'title',
           },
         },
-        {
-          addSheet: {
-            properties: {
-              sheetId: 1,
-              title: 'Monthly Statistic Chart',
-            },
-          },
-        },
+        // {
+        //   addSheet: {
+        //     properties: {
+        //       sheetId: 1,
+        //       title: 'Monthly Statistic Chart',
+        //     },
+        //   },
+        // },
       ];
 
       //
@@ -298,12 +298,12 @@ function setupGoogle({ server, ROOT_URL }) {
 
       // chart data
 
-      const chartData2dArray = await organizeIovR1DataForChart(arrayMain);
+      // const chartData2dArray = await organizeIovR1DataForChart(arrayMain);
       // console.log(chartData2dArray);
-      const chartColumnList = chartData2dArray[0];
-      const chartLastColumn = convertIntegerToCapLetter(chartColumnList.length);
+      // const chartColumnList = chartData2dArray[0];
+      // const chartLastColumn = convertIntegerToCapLetter(chartColumnList.length);
 
-      const chartDataRange = `Monthly Statistic Chart!A1:${chartLastColumn}${chartData2dArray.length}`;
+      // const chartDataRange = `Monthly Statistic Chart!A1:${chartLastColumn}${chartData2dArray.length}`;
 
       const valuesBody = {
         resource: {
@@ -313,113 +313,113 @@ function setupGoogle({ server, ROOT_URL }) {
               majorDimension: 'ROWS',
               values: arrayMain,
             },
-            { range: chartDataRange, majorDimension: 'ROWS', values: chartData2dArray },
+            // { range: chartDataRange, majorDimension: 'ROWS', values: chartData2dArray },
           ],
           valueInputOption: 'RAW',
         },
         spreadsheetId: response.spreadsheetId,
       };
 
-      requests.push({
-        addChart: {
-          chart: {
-            spec: {
-              title: 'IOV and IVF R1 Monthly Statistics',
-              basicChart: {
-                chartType: 'COLUMN',
-                legendPosition: 'BOTTOM-LEGEND',
-                axis: [
-                  {
-                    position: 'BOTTOM_AXIS',
-                    title: 'Calendar Months',
-                  },
-                  {
-                    position: 'LEFT_AXIS',
-                    title: 'Count',
-                  },
-                ],
-                domains: [
-                  {
-                    domain: {
-                      sourceRange: {
-                        sources: [
-                          {
-                            sheetId: 1,
-                            startRowIndex: 0,
-                            endRowIndex: chartData2dArray.length,
-                            startColumnIndex: 0,
-                            endColumnIndex: 1,
-                          },
-                        ],
-                      },
-                    },
-                  },
-                ],
-                series: [
-                  {
-                    series: {
-                      sourceRange: {
-                        sources: [
-                          {
-                            sheetId: 1,
-                            startRowIndex: 0,
-                            endRowIndex: chartData2dArray.length,
-                            startColumnIndex: 1,
-                            endColumnIndex: 2,
-                          },
-                        ],
-                      },
-                    },
-                    targetAxis: 'LEFT_AXIS',
-                  },
-                  {
-                    series: {
-                      sourceRange: {
-                        sources: [
-                          {
-                            sheetId: 1,
-                            startRowIndex: 0,
-                            endRowIndex: chartData2dArray.length,
-                            startColumnIndex: 2,
-                            endColumnIndex: 3,
-                          },
-                        ],
-                      },
-                    },
-                    targetAxis: 'LEFT_AXIS',
-                  },
-                  {
-                    series: {
-                      sourceRange: {
-                        sources: [
-                          {
-                            sheetId: 1,
-                            startRowIndex: 0,
-                            endRowIndex: chartData2dArray.length,
-                            startColumnIndex: 3,
-                            endColumnIndex: 4,
-                          },
-                        ],
-                      },
-                    },
-                    targetAxis: 'LEFT_AXIS',
-                  },
-                ],
-                headerCount: 1,
-              },
-            },
-            position: {
-              overlayPosition: {
-                anchorCell: {
-                  sheetId: 1,
-                  rowIndex: 0,
-                  columnIndex: 4,
-                },
-              },
-            },
-          },
-        },
-      });
+      // requests.push({
+      //   addChart: {
+      //     chart: {
+      //       spec: {
+      //         title: 'IOV and IVF R1 Monthly Statistics',
+      //         basicChart: {
+      //           chartType: 'COLUMN',
+      //           legendPosition: 'BOTTOM-LEGEND',
+      //           axis: [
+      //             {
+      //               position: 'BOTTOM_AXIS',
+      //               title: 'Calendar Months',
+      //             },
+      //             {
+      //               position: 'LEFT_AXIS',
+      //               title: 'Count',
+      //             },
+      //           ],
+      //           domains: [
+      //             {
+      //               domain: {
+      //                 sourceRange: {
+      //                   sources: [
+      //                     {
+      //                       sheetId: 1,
+      //                       startRowIndex: 0,
+      //                       endRowIndex: chartData2dArray.length,
+      //                       startColumnIndex: 0,
+      //                       endColumnIndex: 1,
+      //                     },
+      //                   ],
+      //                 },
+      //               },
+      //             },
+      //           ],
+      //           series: [
+      //             {
+      //               series: {
+      //                 sourceRange: {
+      //                   sources: [
+      //                     {
+      //                       sheetId: 1,
+      //                       startRowIndex: 0,
+      //                       endRowIndex: chartData2dArray.length,
+      //                       startColumnIndex: 1,
+      //                       endColumnIndex: 2,
+      //                     },
+      //                   ],
+      //                 },
+      //               },
+      //               targetAxis: 'LEFT_AXIS',
+      //             },
+      //             {
+      //               series: {
+      //                 sourceRange: {
+      //                   sources: [
+      //                     {
+      //                       sheetId: 1,
+      //                       startRowIndex: 0,
+      //                       endRowIndex: chartData2dArray.length,
+      //                       startColumnIndex: 2,
+      //                       endColumnIndex: 3,
+      //                     },
+      //                   ],
+      //                 },
+      //               },
+      //               targetAxis: 'LEFT_AXIS',
+      //             },
+      //             {
+      //               series: {
+      //                 sourceRange: {
+      //                   sources: [
+      //                     {
+      //                       sheetId: 1,
+      //                       startRowIndex: 0,
+      //                       endRowIndex: chartData2dArray.length,
+      //                       startColumnIndex: 3,
+      //                       endColumnIndex: 4,
+      //                     },
+      //                   ],
+      //                 },
+      //               },
+      //               targetAxis: 'LEFT_AXIS',
+      //             },
+      //           ],
+      //           headerCount: 1,
+      //         },
+      //       },
+      //       position: {
+      //         overlayPosition: {
+      //           anchorCell: {
+      //             sheetId: 1,
+      //             rowIndex: 0,
+      //             columnIndex: 4,
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // });
       //
 
       // for Moniter sheet
@@ -524,8 +524,8 @@ function setupGoogle({ server, ROOT_URL }) {
       let chartArray = [];
 
       const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENTID,
-        process.env.GOOGLE_CLIENTSECRET,
+        process.env.GOOGLE_DEV_CLIENTID,
+        process.env.GOOGLE_DEV_CLIENTSECRET,
         `${ROOT_URL}/oauth2callback`,
       );
 
