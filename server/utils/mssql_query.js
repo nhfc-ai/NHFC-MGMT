@@ -365,6 +365,7 @@ async function statAppV3(tuples, startDateTuples, refSourceCodesTuples) {
         ivfR1: '',
         ivfStartDate: null,
         md: null,
+        monitorType: [],
         monitorStatus: [],
         monitorDate: [],
         monitor: null,
@@ -429,6 +430,7 @@ async function statAppV3(tuples, startDateTuples, refSourceCodesTuples) {
         Reason.toUpperCase().startsWith('SCAN') === true ||
         Reason.toUpperCase().startsWith('WATERSONO') === true
       ) {
+        stat[Chart].monitorType.push(Reason);
         stat[Chart].monitorDate.push(Appt_Date);
         if (
           Status === APPOINTMENT_CODE_MAP_REV.Completed &&
@@ -753,6 +755,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
           obj[element].iovApptStatus === 'Completed' ? r1ApptStatus : '',
           obj[element].iovApptStatus === 'Completed' ? formatUTCDate(r1ApptDate) : '',
           obj[element].iovApptStatus === 'Completed' ? r1Provider : '',
+          obj[element].monitorType[i],
           ele.toUpperCase(),
           formatUTCDate(obj[element].monitorDate[i]),
           obj[element].iovApptStatus === 'Completed' &&
