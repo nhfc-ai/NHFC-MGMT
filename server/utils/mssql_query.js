@@ -445,7 +445,10 @@ async function statAppV3(tuples, startDateTuples, refSourceCodesTuples) {
         stat[Chart].monitorStatus.push(APPOINTMENT_CODE_MAP[Status]);
       }
 
-      if (Reason.toUpperCase() === 'FET' || Reason.toUpperCase() === 'ET') {
+      if (
+        Reason.toUpperCase().startsWith('ET') === true ||
+        Reason.toUpperCase().startsWith('FET') === true
+      ) {
         stat[Chart].transferDate.push(Appt_Date);
         stat[Chart].transferType.push(Reason.toUpperCase());
         if (
