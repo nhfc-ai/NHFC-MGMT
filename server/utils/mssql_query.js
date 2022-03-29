@@ -431,7 +431,8 @@ async function statAppV3(tuples, startDateTuples, refSourceCodesTuples) {
         Reason.toUpperCase().startsWith('BLOOD') === true ||
         Reason.toUpperCase().startsWith('SONO') === true ||
         Reason.toUpperCase().startsWith('SCAN') === true ||
-        Reason.toUpperCase().startsWith('WATERSONO') === true
+        Reason.toUpperCase().startsWith('WATERSONO') === true ||
+        Reason.toUpperCase().startsWith('MONMT') === true
       ) {
         stat[Chart].monitorType.push(Reason);
         stat[Chart].monitorDate.push(Appt_Date);
