@@ -1,7 +1,4 @@
 import React, { useEffect } from 'react';
-// import 'react-virtualized/styles.css'; // only needs to be imported once
-// import Demo from '../../components/admin/Demo2';
-import Button from '@material-ui/core/Button';
 import Router from 'next/router';
 import { styleBackButton } from '../../components/SharedStyles';
 import withAuth from '../../lib/withAuth';
