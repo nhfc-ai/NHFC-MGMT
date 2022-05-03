@@ -234,12 +234,13 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
       columnStyles: { text: { cellWidth: 'wrap' } },
     });
 
-    const p2 = doc.addPage('p');
-    p2.setFontSize(24);
-    p2.text('LABEL', 10, 10);
-    p2.setFontSize(20);
-    p2.text('FOR EMBRYOLOGY LAB ONLY', 10, 20);
-    p2.autoTable({
+    doc.addPage('a4', 'portrait');
+    doc.setPage(2);
+    doc.setFontSize(24);
+    doc.text('LABEL', 10, 10);
+    doc.setFontSize(20);
+    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 20);
+    doc.autoTable({
       head: [['First Name', 'Last Name']],
       headStyles: {
         fillColor: [200, 200, 200],
@@ -255,7 +256,6 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
         { header: 'First Name', dataKey: 'firstName' },
         { header: 'Last Name', dataKey: 'lastName' },
       ],
-      columnStyles: { firstName: { cellWidth: 80 }, lastName: { cellWidth: 80 } },
       startY: 30,
       startX: 5,
       theme: 'striped',
