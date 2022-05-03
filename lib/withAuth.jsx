@@ -11,6 +11,7 @@ export default function withAuth(
     logoutRequired = false,
     adminRequired = false,
     managementRequired = false,
+    embryologyRequired = false,
     contactRequired = false,
   } = {},
 ) {
@@ -19,6 +20,7 @@ export default function withAuth(
       id: PropTypes.string,
       isAdmin: PropTypes.bool,
       isManagement: PropTypes.bool,
+      isEmbryology: PropTypes.bool,
     }),
     isFromServer: PropTypes.bool.isRequired,
   };
@@ -55,6 +57,10 @@ export default function withAuth(
       if (!contactRequired) {
         if (!managementRequired && user && user.isManagement) {
           Router.push('/mgmt/');
+        }
+
+        if (!embryologyRequired && user && user.isEmbryology) {
+          Router.push('/embryology/');
         }
 
         if (loginRequired && !logoutRequired && !user) {

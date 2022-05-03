@@ -20,6 +20,192 @@ const APPOINTMENT_CODE_MAP = {
   10: 'Unknown',
 };
 
+const DPS_CODE =
+  "('D & C', 'ER', 'ERIV', 'ERIVMAKA', 'ERMAKA', 'ER-POS', 'ET', 'ET&FET', 'FET', 'FETIV', 'FETMAKA', 'FOT', 'HYSTODC', 'OVAREJ', 'TESA', 'THAWDONOR', 'THAWEGGS', 'THAWEMB', 'ERHYSMAKA', 'ERHYSTO', 'ERPRP', 'ETMAKA', 'HYSTOMAKA', 'HYSTOPRP', 'PRP', 'PRPIV', 'PRPIVMAKA', 'PRPLOCAL', 'PRPMAKA', 'UTPRP')";
+
+const DPS_LABEL_CODE = `(
+  'ER',
+  'ERHYSMAKA',
+  'ERHYSTO',
+  'ERIV',
+  'ERIVMAKA',
+  'ERMAKA',
+  'ER-POS',
+  'ERPRP',
+  'ET',
+  'ET&FET',
+  'ETMAKA',
+  'FET',
+  'FETIV',
+  'FETMAKA',
+  'FOT',
+  'THAWDONOR',
+  'THAWEGGS',
+  'THAWEMB',
+)`;
+
+const ER_PATTERN = 'ER';
+
+const DPS_TABLE_COLUMN_META = [
+  { field: 'no', headerName: 'No.', width: 10, editable: false, type: 'number' },
+  {
+    field: 'lastName',
+    headerName: 'Last Name',
+    type: 'string',
+    width: 100,
+    editable: false,
+  },
+  {
+    field: 'firstName',
+    headerName: 'First Name',
+    type: 'string',
+    width: 100,
+    editable: false,
+  },
+  {
+    field: 'dob',
+    headerName: 'DOB',
+    type: 'date',
+    width: 100,
+    editable: false,
+  },
+  {
+    field: 'age',
+    headerName: 'Age',
+    type: 'number',
+    width: 50,
+    editable: false,
+  },
+  {
+    field: 'reason',
+    headerName: 'Reason',
+    type: 'string',
+    width: 100,
+    editable: false,
+  },
+  {
+    field: 'time',
+    headerName: 'Time',
+    type: 'time',
+    width: 50,
+    editable: false,
+  },
+  {
+    field: 'chart',
+    headerName: 'Chart',
+    type: 'number',
+    width: 100,
+    editable: false,
+  },
+  {
+    field: 'md',
+    headerName: 'MD',
+    type: 'string',
+    width: 50,
+    editable: true,
+  },
+  {
+    field: 'foll',
+    headerName: 'Fol/L',
+    type: 'number',
+    width: 30,
+    editable: true,
+  },
+  {
+    field: 'folr',
+    headerName: 'Fol/R',
+    type: 'number',
+    width: 30,
+    editable: true,
+  },
+  {
+    field: 'trigt',
+    headerName: 'TrigT',
+    type: 'time',
+    width: 50,
+    editable: true,
+    preProcessEditCellProps: (params) => {
+      const ischeckedProps = params.otherFieldsProps.checked;
+      const reasonProps = params.otherFieldsProps.reason;
+      const hasError =
+        reasonProps.value.toUpperCase().startsWith(ER_PATTERN) === true &&
+        ischeckedProps.value &&
+        !params.props.value;
+      return { ...params.props, error: hasError };
+    },
+  },
+  {
+    field: 'gvConsent',
+    headerName: 'GV Consent',
+    type: 'singleSelect',
+    valueOptions: ['DISCARD', 'DONATE', 'FREEZE', 'UNKNOWN'],
+    width: 80,
+    editable: true,
+    preProcessEditCellProps: (params) => {
+      const ischeckedProps = params.otherFieldsProps.checked;
+      const reasonProps = params.otherFieldsProps.reason;
+      const hasError =
+        reasonProps.value.toUpperCase().startsWith(ER_PATTERN) === true &&
+        ischeckedProps.value &&
+        !params.props.value;
+      return { ...params.props, error: hasError };
+    },
+  },
+  {
+    field: 'icsi',
+    headerName: 'ICSI',
+    type: 'singleSelect',
+    valueOptions: ['YES', 'NO', 'UNKNOWN'],
+    width: 80,
+    editable: true,
+    preProcessEditCellProps: (params) => {
+      const ischeckedProps = params.otherFieldsProps.checked;
+      const reasonProps = params.otherFieldsProps.reason;
+      const hasError =
+        reasonProps.value.toUpperCase().startsWith(ER_PATTERN) === true &&
+        ischeckedProps.value &&
+        !params.props.value;
+      return { ...params.props, error: hasError };
+    },
+  },
+  {
+    field: 'hatching',
+    headerName: 'Hatching',
+    type: 'singleSelect',
+    valueOptions: ['YES', 'NO', 'UNKNOWN'],
+    width: 80,
+    editable: true,
+    preProcessEditCellProps: (params) => {
+      const ischeckedProps = params.otherFieldsProps.checked;
+      const reasonProps = params.otherFieldsProps.reason;
+      const hasError =
+        reasonProps.value.toUpperCase().startsWith(ER_PATTERN) === true &&
+        ischeckedProps.value &&
+        !params.props.value;
+      return { ...params.props, error: hasError };
+    },
+  },
+  {
+    field: 'plan',
+    headerName: 'PLAN',
+    type: 'string',
+    width: 160,
+    editable: true,
+    preProcessEditCellProps: (params) => {
+      const ischeckedProps = params.otherFieldsProps.checked;
+      const hasError = ischeckedProps.value && !params.props.value.trim();
+      return { ...params.props, error: hasError };
+    },
+  },
+  {
+    field: 'checked',
+    headerName: 'Checked',
+    type: 'boolean',
+    width: 40,
+    editable: true,
+  },
+];
+
 const APPOINTMENT_CODE_MAP_REV = {
   Pending: 0,
   Confirmed: 1,
@@ -1086,6 +1272,43 @@ function formatDate(date) {
   }
 }
 
+function formatTime(date) {
+  try {
+    let hour = `${date.getHours()}`;
+    let minute = `${date.getMinutes()}`;
+
+    if (hour.length < 2) hour = `0${hour}`;
+    if (minute.length < 2) minute = `0${minute}`;
+
+    return [hour, minute].join(':');
+  } catch (err) {
+    return null;
+  }
+}
+
+function formatDateWithIncrDays(date, incr) {
+  try {
+    let dateObj;
+    if (typeof date === 'string') {
+      dateObj = new Date(date);
+    } else {
+      dateObj = date;
+    }
+    dateObj.setDate(dateObj.getDate() + incr);
+
+    let month = `${dateObj.getMonth() + 1}`;
+    let day = `${dateObj.getDate()}`;
+    const year = dateObj.getFullYear();
+
+    if (month.length < 2) month = `0${month}`;
+    if (day.length < 2) day = `0${day}`;
+
+    return [year, month, day].join('-');
+  } catch (err) {
+    return null;
+  }
+}
+
 function formatUTCDate(date) {
   try {
     let month = `${date.getUTCMonth() + 1}`;
@@ -1096,6 +1319,20 @@ function formatUTCDate(date) {
     if (day.length < 2) day = `0${day}`;
 
     return [year, month, day].join('-');
+  } catch (err) {
+    return null;
+  }
+}
+
+function formatUTCTime(date) {
+  try {
+    let hour = `${date.getUTCHours() + 1}`;
+    let minute = `${date.getUTCMinutes()}`;
+
+    if (hour.length < 2) hour = `0${hour}`;
+    if (minute.length < 2) minute = `0${minute}`;
+
+    return [hour, minute].join(':');
   } catch (err) {
     return null;
   }
@@ -1154,6 +1391,18 @@ function getTodayInNextYear(dateObj) {
 function newMysqlInstance() {
   return new Sequelize(
     process.env.MYSQL_DATABASE,
+    process.env.MYSQL_USER,
+    process.env.MYSQL_PASSWORD,
+    {
+      host: process.env.MYSQL_SERVER,
+      dialect: 'mysql',
+    },
+  );
+}
+
+function newMysqlIVFInstance() {
+  return new Sequelize(
+    process.env.MYSQL_IVF_DATABASE,
     process.env.MYSQL_USER,
     process.env.MYSQL_PASSWORD,
     {
@@ -1647,11 +1896,15 @@ module.exports = {
   convertIntegerToCapLetter,
   organizeIovR1DataForChart,
   newMysqlInstance,
+  newMysqlIVFInstance,
   sendEmail,
   getUTCTimeRangeByCalenderMonth,
   getLocalTimeRangeByCalenderMonth,
   formatDate,
+  formatTime,
+  formatDateWithIncrDays,
   formatUTCDate,
+  formatUTCTime,
   formatPhoneNumber,
   getState,
   getTodayInNextYear,
@@ -1666,4 +1919,7 @@ module.exports = {
   APPOINTMENT_CODE_MAP_REV,
   columnTitleList,
   referringPhysicianCode,
+  DPS_CODE,
+  DPS_LABEL_CODE,
+  DPS_TABLE_COLUMN_META,
 };

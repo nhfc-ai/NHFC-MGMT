@@ -23,6 +23,7 @@ class User extends Model {
       'department',
       'isAdmin',
       'isManagement',
+      'isEmbryology',
     ];
   }
 
@@ -34,6 +35,7 @@ class User extends Model {
     department,
     avatarUrl,
     isManagement,
+    isEmbryology,
   }) {
     const user = await this.findOne({ where: { googleId } });
 
@@ -72,6 +74,7 @@ class User extends Model {
       avatarUrl,
       isAdmin: userCount === 0,
       isManagement,
+      isEmbryology,
     });
 
     try {
@@ -108,6 +111,7 @@ User.init(
     googleId: { type: DataTypes.STRING, allowNull: false, unique: true },
     isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false },
     isManagement: { type: DataTypes.BOOLEAN, defaultValue: false },
+    isEmbryology: { type: DataTypes.BOOLEAN, defaultValue: false },
   },
   {
     // Other model options go here

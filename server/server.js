@@ -17,6 +17,7 @@ const { initMigrateData } = require('./models/Group');
 const { newMysqlInstance } = require('./utils/utils');
 
 const setupGoogle = require('./google');
+const fileSystem = require('./filesystem');
 const api = require('./api');
 
 require('dotenv').config();
@@ -109,6 +110,7 @@ app.prepare().then(async () => {
   // });
 
   setupGoogle({ server, ROOT_URL });
+  fileSystem({ server });
   api(server);
 
   // server.get('*', (req, res) => handle(req, res));

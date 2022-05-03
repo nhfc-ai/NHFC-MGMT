@@ -1,3 +1,5 @@
+const { DPS_CODE } = require('./utils');
+
 const iovStats = (startDate, endDate) => {
   //   console.log([startDate, endDate]);
   // return `select a.Chart, CONVERT(DATE, p.Birth_Date) as Birth_Date, p.Race, p.Primary_Code, p.Address_1, p.city, p.State, a.Reason,
@@ -45,6 +47,23 @@ const startDates = (startDate, endDate) => {
     where s.StartDate between '${startDate}' and '${endDate}' and art.CycleCount = 1 and art.CycleTypeId like 'IVF%'`;
 };
 
+const rawDPS = (apptDate) => {
+  return `
+      ;with grp as (
+        select *, ROW_NUMBER() OVER (PARTITION BY ARTCycle_ID ORDER BY CreateDate DESC) AS rn
+        FROM dbo.vEggRetrieval
+          )
+      select p.Last_Name, p.First_Name, p.Birth_Date,
+            a.Reason, a.Status, convert(time, a.Appt_Time) as Appt_Time,
+            convert(int, a.Chart) as Chart, e.[Plan] as Plan1
+      from dbo.Appointment_VIEW as a
+      inner join dbo.Patien_Info_V5 as p on a.Chart = p.Chart_Number
+      inner join grp as e on e.ARTCycle_ID = a.ARTCycle_ID and e.rn=1
+      where a.Resource = 6 and a.Appt_Date = '${apptDate}' and a.reason in ${DPS_CODE}
+      order by a.reason
+  `;
+};
+
 const dateColumns = ['DOB', 'Latest_IOV_Appt_Date', 'R1_Appt_Date', 'IVF_Start_Date'];
 
 module.exports = {
@@ -52,5 +71,6 @@ module.exports = {
   iovStatsV2,
   startDates,
   refSourceCodes,
+  rawDPS,
   dateColumns,
 };

@@ -20,7 +20,7 @@ class Index extends React.Component {
   render() {
     const { user } = this.props;
 
-    if (user.isManagement || user.isAdmin) {
+    if (user.isManagement || user.isEmbryology || user.isAdmin) {
       return null;
     }
     return (
@@ -28,10 +28,7 @@ class Index extends React.Component {
         <Head>
           <title>Welcome to NHFC MGMT Web Services</title>
         </Head>
-        <p>
-          Only functions for the management team are online now, please email jia.wang@nhfc.com for
-          more information.
-        </p>
+        <p>Only functions for the management and lab team are online for now.</p>
       </div>
     );
   }

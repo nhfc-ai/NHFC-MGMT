@@ -47,6 +47,7 @@ function setupGoogle({ server, ROOT_URL }) {
         department: userGroup,
         avatarUrl,
         isManagement: userGroup === 'management',
+        isEmbryology: userGroup === 'embryology',
       });
       verified(null, user);
     } catch (err) {
@@ -58,8 +59,8 @@ function setupGoogle({ server, ROOT_URL }) {
   passport.use(
     new Strategy(
       {
-        clientID: process.env.GOOGLE_CLIENTID,
-        clientSecret: process.env.GOOGLE_CLIENTSECRET,
+        clientID: process.env.GOOGLE_DEV_CLIENTID,
+        clientSecret: process.env.GOOGLE_DEV_CLIENTSECRET,
         callbackURL: `${ROOT_URL}/oauth2callback`,
         passReqToCallback: true,
       },
@@ -217,8 +218,8 @@ function setupGoogle({ server, ROOT_URL }) {
       const { checkedMonitor, checkedER, checkedTransfer } = req.body;
 
       const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENTID,
-        process.env.GOOGLE_CLIENTSECRET,
+        process.env.GOOGLE_DEV_CLIENTID,
+        process.env.GOOGLE_DEV_CLIENTSECRET,
         `${ROOT_URL}/oauth2callback`,
       );
 
@@ -524,8 +525,8 @@ function setupGoogle({ server, ROOT_URL }) {
       let chartArray = [];
 
       const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENTID,
-        process.env.GOOGLE_CLIENTSECRET,
+        process.env.GOOGLE_DEV_CLIENTID,
+        process.env.GOOGLE_DEV_CLIENTSECRET,
         `${ROOT_URL}/oauth2callback`,
       );
 

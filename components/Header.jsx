@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import Link from 'next/link';
-import Toolbar from '@material-ui/core/Toolbar';
-import Grid from '@material-ui/core/Grid';
-import Avatar from '@material-ui/core/Avatar';
+import Toolbar from '@mui/material/Toolbar';
+import Grid from '@mui/material/Grid';
+import Avatar from '@mui/material/Avatar';
 
 import MenuWithAvatar from './MenuWithAvatar';
 

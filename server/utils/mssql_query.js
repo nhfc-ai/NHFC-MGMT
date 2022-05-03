@@ -2,7 +2,9 @@ const mssql = require('../models/Mssql');
 const {
   formatPhoneNumber,
   formatDate,
+  formatTime,
   formatUTCDate,
+  formatUTCTime,
   dateDiff,
   iovR1MainTable,
   iovR1MonitorTable,
@@ -478,6 +480,48 @@ async function statAppV3(tuples, startDateTuples, refSourceCodesTuples) {
   return stat;
 }
 
+async function packDPSData(dpsTuples, triggerObj) {
+  const outArray = [];
+  for (let i = 0; i < dpsTuples.recordset.length; i += 1) {
+    // console.log([
+    //   tuples.recordset[i].Birth_Date,
+    //   tuples.recordset[i].Birth_Date.getFullYear(),
+    //   tuples.recordset[i].Birth_Date.getMonth(),
+    //   tuples.recordset[i].Birth_Date.getDate(),
+    // ]);
+    const { Last_Name, First_Name, Birth_Date, Reason, Status, Appt_Time, Chart, Plan1 } =
+      dpsTuples.recordset[i];
+
+    const Plan = Plan1.replace(/\n/g, ' ').replace(/\r/g, ' ');
+    // if (Reason.toUpperCase().startsWith('IOV') === false) {
+    //   continue;
+    // }
+    const subObj = {
+      id: i + 1,
+      no: i + 1,
+      lastName: Last_Name.trim(),
+      firstName: First_Name.trim(),
+      dob: formatUTCDate(Birth_Date),
+      age: calAge(Birth_Date),
+      reason: Reason,
+      time: formatUTCTime(Appt_Time),
+      chart: Chart,
+      md: '',
+      foll: Chart in triggerObj ? triggerObj[Chart].l : '',
+      folr: Chart in triggerObj ? triggerObj[Chart].r : '',
+      trigt: Chart in triggerObj ? triggerObj[Chart].trgt : '',
+      gvConsent: '',
+      icsi: '',
+      hatching: '',
+      plan: Plan,
+      checked: false,
+    };
+    outArray.push(subObj);
+  }
+
+  return outArray;
+}
+
 async function statAppForCalendly(tuples) {
   const stat = {};
   for (let i = 0; i < tuples.recordset.length; i += 1) {
@@ -894,4 +938,5 @@ module.exports = {
   organizeArrayForDisplayV2,
   organizeArrayForDisplayV3,
   organizeArrayForCalendly,
+  packDPSData,
 };
