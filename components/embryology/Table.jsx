@@ -34,6 +34,7 @@ import {
   OVERWRITE_ALERT,
   DPS_REPORT_PREFIX,
   DPS_BASIC_PATH,
+  EXCLUDED_LABEL,
 } from '../../lib/utils';
 import { RGBColor } from '../../lib/rgbcolor';
 import notify from '../../lib/notify';
@@ -92,6 +93,7 @@ function createTextFieldInstance(v, ...coor) {
 
 function processRows(mapRows) {
   const body = [];
+  const label = [];
   mapRows.forEach((value) => {
     if (value.checked === true) {
       const subList = () => {
@@ -107,9 +109,15 @@ function processRows(mapRows) {
         return l;
       };
       body.push(subList());
+      const n = {};
+      if (EXCLUDED_LABEL.indexOf(value.reason) === -1) {
+        n.firstName = value.firstName;
+        n.lastName = value.lastName;
+        label.push(n);
+      }
     }
   });
-  return body;
+  return [body, label];
 }
 
 function defineColorForRows(body) {
@@ -177,7 +185,8 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     const doc = new jsPDF('l');
     // console.log(processRows(apiRef.current.getRowModels()));
     // console.log(packHeader());
-    const dataPDF = processRows(apiRef.current.getRowModels());
+    const [dataPDF, labelPDF] = processRows(apiRef.current.getRowModels());
+    console.log(labelPDF);
     const colorMaps = defineColorForRows(dataPDF);
 
     doc.setFontSize(14);
@@ -211,7 +220,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
         halign: 'center',
       },
       body: dataPDF,
-      bodyStyles: { fontSize: 6 },
+      bodyStyles: { fontSize: 6, textColor: 0 },
       columns: packHeader(),
       startY: 50,
       startX: 5,
@@ -223,6 +232,33 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
       },
       theme: 'grid',
       columnStyles: { text: { cellWidth: 'wrap' } },
+    });
+
+    const p2 = doc.addPage('p');
+    p2.setFontSize(24);
+    p2.text('LABEL', 10, 10);
+    p2.setFontSize(20);
+    p2.text('FOR EMBRYOLOGY LAB ONLY', 10, 20);
+    p2.autoTable({
+      head: [['First Name', 'Last Name']],
+      headStyles: {
+        fillColor: [200, 200, 200],
+        fontStyle: 'bold',
+        textColor: 0,
+        fontSize: 20,
+        lineColor: [0, 0, 0],
+        halign: 'center',
+      },
+      body: labelPDF,
+      bodyStyles: { fontSize: 20, fontStyle: 'bold', cellWidth: 'auto', textColor: 0 },
+      columns: [
+        { header: 'First Name', dataKey: 'firstName' },
+        { header: 'Last Name', dataKey: 'lastName' },
+      ],
+      columnStyles: { firstName: { cellWidth: 80 }, lastName: { cellWidth: 80 } },
+      startY: 30,
+      startX: 5,
+      theme: 'striped',
     });
 
     doc.setProperties({
