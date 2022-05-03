@@ -375,7 +375,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
         </Button>
         <Dialog maxWidth="xs" open={alert.length > 0} onClose={handleClose}>
           <DialogTitle>Are you sure?</DialogTitle>
-          <DialogContent dividers>{`Pressing 'Yes' will continue, ${alert}`}</DialogContent>
+          <DialogContent dividers>{`${alert}`}</DialogContent>
           <Button onClick={handleNo}>No</Button>
           <Button onClick={handleYes} autoFocus>
             Yes
