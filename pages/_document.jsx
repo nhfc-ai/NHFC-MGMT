@@ -62,6 +62,11 @@ class MyDocument extends Document {
             href="https://fonts.googleapis.com/css?family=Muli:300,400:latin"
           />
 
+          <link
+            rel="stylesheet"
+            href="https://storage.googleapis.com/builderbook/nprogress.min.css"
+          />
+
           <style>
             {`
               a {
