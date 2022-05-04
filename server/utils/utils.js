@@ -1326,7 +1326,7 @@ function formatUTCDate(date) {
 
 function formatUTCTime(date) {
   try {
-    let hour = `${date.getUTCHours() + 1}`;
+    let hour = `${date.getUTCHours()}`;
     let minute = `${date.getUTCMinutes()}`;
 
     if (hour.length < 2) hour = `0${hour}`;
