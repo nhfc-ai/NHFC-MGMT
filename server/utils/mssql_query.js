@@ -492,7 +492,7 @@ async function packDPSData(dpsTuples, triggerObj) {
     const { Last_Name, First_Name, Birth_Date, Reason, Status, Appt_Time, Chart, Plan1 } =
       dpsTuples.recordset[i];
 
-    const Plan = Plan1.replace(/\n/g, ' ').replace(/\r/g, ' ');
+    const Plan = Plan1 ? Plan1.replace(/\n/g, ' ').replace(/\r/g, ' ') : '';
     // if (Reason.toUpperCase().startsWith('IOV') === false) {
     //   continue;
     // }
