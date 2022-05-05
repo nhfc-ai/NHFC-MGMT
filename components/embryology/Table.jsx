@@ -235,7 +235,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     });
 
     doc.addPage('a4', 'portrait');
-    doc.setPage(2);
+    // doc.setPage(2);
     doc.setFontSize(24);
     doc.text('LABEL', 10, 10);
     doc.setFontSize(20);
