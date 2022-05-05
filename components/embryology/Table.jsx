@@ -165,10 +165,10 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
   const DPS_FILE_NAME = `${DPS_REPORT_PREFIX}-${queryDate}.pdf`;
   const DPS_FILE_FULL_PATH = `${DPS_BASIC_PATH}${DPS_FILE_NAME}`;
 
-  const [MD, setMD] = React.useState(null);
-  const [PRE, setPRE] = React.useState(null);
-  const [POST, setPOST] = React.useState(null);
-  const [MA, setMA] = React.useState(null);
+  const [MD, setMD] = React.useState('');
+  const [PRE, setPRE] = React.useState('');
+  const [POST, setPOST] = React.useState('');
+  const [MA, setMA] = React.useState('');
   const [alert, setAlert] = React.useState('');
   const [checkedCount, setCheckedCount] = React.useState(0);
   const { apiRef, columns } = useApiRef();
@@ -186,21 +186,25 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     // console.log(processRows(apiRef.current.getRowModels()));
     // console.log(packHeader());
     const [dataPDF, labelPDF] = processRows(apiRef.current.getRowModels());
-    console.log(labelPDF);
+    console.log([MD, PRE, POST, MA]);
     const colorMaps = defineColorForRows(dataPDF);
 
     doc.setFontSize(14);
     doc.text('MD:', 30, 10);
-    doc.addField(createTextFieldInstance(`DR. ${MD.toUpperCase()}`, 48, 4, 30, 8));
+    // doc.addField(createTextFieldInstance(`DR. ${MD.toUpperCase()}`, 48, 4, 30, 8));
+    doc.text(`DR. ${MD.toUpperCase()}`, 48, 10);
 
     doc.text('PRE:', 30, 20);
-    doc.addField(createTextFieldInstance(PRE.toUpperCase(), 48, 14, 30, 8));
+    // doc.addField(createTextFieldInstance(PRE.toUpperCase(), 48, 14, 30, 8));
+    doc.text(PRE.toUpperCase(), 48, 20);
 
     doc.text('POST:', 30, 30);
-    doc.addField(createTextFieldInstance(POST.toUpperCase(), 48, 24, 30, 8));
+    // doc.addField(createTextFieldInstance(POST.toUpperCase(), 48, 24, 30, 8));
+    doc.text(POST.toUpperCase(), 48, 30);
 
     doc.text('MA:', 30, 40);
-    doc.addField(createTextFieldInstance(MA.toUpperCase(), 48, 34, 30, 8));
+    // doc.addField(createTextFieldInstance(MA.toUpperCase(), 48, 34, 30, 8));
+    doc.text(MA.toUpperCase(), 48, 40);
 
     doc.setFontSize(18);
     doc.text('DAILY PROCEDURE SCHEDULE', 100, 10);
