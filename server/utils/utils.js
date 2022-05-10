@@ -6,6 +6,10 @@ const nodemailer = require('nodemailer');
 
 require('dotenv').config();
 
+const ER_PATTERN = 'ER';
+const LUPRON_PATTERN = 'Lupron';
+const OVIDREL_PATTERN = 'Ovidrel';
+
 const APPOINTMENT_CODE_MAP = {
   0: 'Pending',
   1: 'Confirmed',
@@ -43,8 +47,6 @@ const DPS_LABEL_CODE = `(
   'THAWEGGS',
   'THAWEMB',
 )`;
-
-const ER_PATTERN = 'ER';
 
 const DPS_TABLE_COLUMN_META = [
   { field: 'no', headerName: 'No.', width: 10, editable: false, type: 'number' },
@@ -1922,4 +1924,7 @@ module.exports = {
   DPS_CODE,
   DPS_LABEL_CODE,
   DPS_TABLE_COLUMN_META,
+  ER_PATTERN,
+  LUPRON_PATTERN,
+  OVIDREL_PATTERN,
 };

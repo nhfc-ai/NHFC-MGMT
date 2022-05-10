@@ -53,7 +53,7 @@ const rawDPS = (apptDate) => {
         select *, ROW_NUMBER() OVER (PARTITION BY ARTCycle_ID ORDER BY CreateDate DESC) AS rn
         FROM dbo.vEggRetrieval
           )
-      select p.Last_Name, p.First_Name, p.Birth_Date,
+      select a.Chart as ChartStr, p.Last_Name, p.First_Name, p.Birth_Date,
             a.Reason, a.Status, convert(time, a.Appt_Time) as Appt_Time,
             convert(int, a.Chart) as Chart, e.[Plan] as Plan1
       from dbo.Appointment_VIEW as a
@@ -61,6 +61,22 @@ const rawDPS = (apptDate) => {
       left join grp as e on e.ARTCycle_ID = a.ARTCycle_ID and e.rn=1
       where a.Resource = 6 and a.Appt_Date = '${apptDate}' and a.reason in ${DPS_CODE}
       order by a.Appt_Time, a.reason
+  `;
+};
+
+const checklistER = (chartList) => {
+  let chartListStr = `)`;
+  chartListStr = `'${chartList.pop()}' ${chartListStr}`;
+  chartList.forEach((ele) => {
+    chartListStr = `'${ele}', ${chartListStr}`;
+  });
+  chartListStr = `( ${chartListStr}`;
+  return `
+    select p.Chart_Number as Chart, cli.Name, cli.Date, cli.Result, cli.Type from dbo.vCheckListItem as cli
+    inner join dbo.vCheckList as cl on cli.CheckList_ID = cl.ID
+    inner join dbo.Patien_Info_V5 as p on p.id = cl.PatientID
+    where p.Chart_Number in ${chartListStr} and cli.type = 'InitialLabs'
+    order by cl.ARTCycle_ID, cli.name, cli.Date
   `;
 };
 
@@ -73,4 +89,5 @@ module.exports = {
   refSourceCodes,
   rawDPS,
   dateColumns,
+  checklistER,
 };

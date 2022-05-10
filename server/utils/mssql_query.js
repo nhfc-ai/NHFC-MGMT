@@ -16,6 +16,7 @@ const {
   r1CodeList,
   APPOINTMENT_CODE_MAP,
   APPOINTMENT_CODE_MAP_REV,
+  ER_PATTERN,
 } = require('./utils');
 
 function calAge(dob) {
@@ -479,8 +480,19 @@ async function statAppV3(tuples, startDateTuples, refSourceCodesTuples) {
 
   return stat;
 }
+async function getERChart(dpsTuples) {
+  const outArray = [];
+  for (let i = 0; i < dpsTuples.recordset.length; i += 1) {
+    const { ChartStr, Last_Name, First_Name, Birth_Date, Reason, Status, Appt_Time, Chart, Plan1 } =
+      dpsTuples.recordset[i];
+    if (Reason.startsWith(ER_PATTERN) === true) {
+      outArray.push(ChartStr);
+    }
+  }
+  return outArray;
+}
 
-async function packDPSData(dpsTuples, triggerObj) {
+async function packDPSData(dpsTuples, triggerObj, checkListObj) {
   const outArray = [];
   for (let i = 0; i < dpsTuples.recordset.length; i += 1) {
     // console.log([
@@ -489,13 +501,32 @@ async function packDPSData(dpsTuples, triggerObj) {
     //   tuples.recordset[i].Birth_Date.getMonth(),
     //   tuples.recordset[i].Birth_Date.getDate(),
     // ]);
-    const { Last_Name, First_Name, Birth_Date, Reason, Status, Appt_Time, Chart, Plan1 } =
+    const { ChartStr, Last_Name, First_Name, Birth_Date, Reason, Status, Appt_Time, Chart, Plan1 } =
       dpsTuples.recordset[i];
 
     const Plan = Plan1 ? Plan1.replace(/\n/g, ' ').replace(/\r/g, ' ') : '';
     // if (Reason.toUpperCase().startsWith('IOV') === false) {
     //   continue;
     // }
+    let checkListStr = ``;
+    if (Chart in checkListObj === true) {
+      if (checkListObj[Chart].missing.length > 0) {
+        checkListStr += 'Missing: ';
+        checkListObj[Chart].missing.forEach((ele) => {
+          checkListStr += `${ele} `;
+        });
+      }
+      if (checkListObj[Chart].pending.length > 0) {
+        checkListStr += 'Pending: ';
+        checkListObj[Chart].pending.forEach((ele) => {
+          checkListStr += `${ele} `;
+        });
+      }
+      if (checkListObj[Chart].pending.length === 0 && checkListObj[Chart].missing.length === 0) {
+        checkListStr += 'OK';
+      }
+    }
+
     const subObj = {
       id: i + 1,
       no: i + 1,
@@ -507,19 +538,66 @@ async function packDPSData(dpsTuples, triggerObj) {
       time: formatUTCTime(Appt_Time),
       chart: Chart,
       md: '',
-      foll: Chart in triggerObj ? triggerObj[Chart].l : '',
-      folr: Chart in triggerObj ? triggerObj[Chart].r : '',
-      trigt: Chart in triggerObj ? triggerObj[Chart].trgt : '',
+      foll: Chart in triggerObj && Reason.indexOf(ER_PATTERN) !== -1 ? triggerObj[Chart].l : '',
+      folr: Chart in triggerObj && Reason.indexOf(ER_PATTERN) !== -1 ? triggerObj[Chart].r : '',
+      trigt: Chart in triggerObj && Reason.indexOf(ER_PATTERN) !== -1 ? triggerObj[Chart].trgt : '',
+      trigm: Chart in triggerObj && Reason.indexOf(ER_PATTERN) !== -1 ? triggerObj[Chart].trgm : '',
       gvConsent: '',
       icsi: '',
       hatching: '',
       plan: Plan,
       checked: false,
+      scr: checkListStr,
     };
     outArray.push(subObj);
   }
 
   return outArray;
+}
+
+async function packCheckList(checkListTuples) {
+  const checkList = {};
+  const outChecklist = {};
+  const today = new Date();
+  for (let i = 0; i < checkListTuples.recordset.length; i += 1) {
+    // console.log([
+    //   tuples.recordset[i].Birth_Date,
+    //   tuples.recordset[i].Birth_Date.getFullYear(),
+    //   tuples.recordset[i].Birth_Date.getMonth(),
+    //   tuples.recordset[i].Birth_Date.getDate(),
+    // ]);
+    const { Chart, Name, Date, Result, Type } = checkListTuples.recordset[i];
+
+    const safeResult = Result || '';
+
+    if (Chart in checkList === false) {
+      checkList[Chart] = {};
+      checkList[Chart][Name] = { date: Date, result: safeResult };
+    } else if (Name in checkList[Chart] === false) {
+      checkList[Chart][Name] = { date: Date, result: safeResult };
+    } else if (checkList[Chart][Name].date) {
+      if (Date > checkList[Chart][Name].date) {
+        checkList[Chart][Name].date = Date;
+      }
+    } else {
+      checkList[Chart][Name].date = Date;
+    }
+  }
+
+  Object.keys(checkList).forEach((ele) => {
+    outChecklist[parseInt(ele, 10)] = { missing: [], pending: [] };
+    Object.keys(checkList[ele]).forEach((subEle) => {
+      if (!checkList[ele][subEle].date) {
+        outChecklist[parseInt(ele, 10)].missing.push(subEle);
+      } else if (dateDiff(today, checkList[ele][subEle].date) >= 365) {
+        outChecklist[parseInt(ele, 10)].missing.push(subEle);
+      } else if (checkList[ele][subEle].result === '') {
+        outChecklist[parseInt(ele, 10)].pending.push(subEle);
+      }
+    });
+  });
+
+  return outChecklist;
 }
 
 async function statAppForCalendly(tuples) {
@@ -939,4 +1017,6 @@ module.exports = {
   organizeArrayForDisplayV3,
   organizeArrayForCalendly,
   packDPSData,
+  packCheckList,
+  getERChart,
 };

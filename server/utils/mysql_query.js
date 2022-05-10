@@ -1,3 +1,5 @@
+const { LUPRON_PATTERN, OVIDREL_PATTERN } = require('./utils');
+
 function processFolliclesString(folStr) {
   const folObj = JSON.parse(folStr);
   //   console.log(folObj);
@@ -33,7 +35,7 @@ function parseTwelveTime(value) {
   }
   const timeUpCase = value.trim().toUpperCase();
   const flagIndex = timeUpCase.indexOf('M');
-  const timePureNum = timeUpCase.slice(0, flagIndex-1);
+  const timePureNum = timeUpCase.slice(0, flagIndex - 1);
   let [h, m] = timePureNum.split(':');
   if (timeUpCase.slice(flagIndex - 1, flagIndex + 1) === 'AM') {
     h = h.length === 1 ? `0${h}` : h;
@@ -41,6 +43,26 @@ function parseTwelveTime(value) {
   }
   h = parseInt(h, 10) + 12;
   return `${h}:${m}`;
+}
+
+function parseTriggerMethod(value) {
+  if (value === '') {
+    return value;
+  }
+  let trigm = '';
+  console.log([LUPRON_PATTERN, OVIDREL_PATTERN]);
+  if (value.indexOf(LUPRON_PATTERN) !== -1) {
+    console.log('lup');
+    trigm += 'LUP ';
+  }
+  if (value.indexOf(OVIDREL_PATTERN) !== -1) {
+    console.log('ovi');
+    trigm += 'OVI ';
+  }
+  if (value.indexOf('after') !== -1) {
+    trigm += value.slice(value.indexOf('after') + 6, value.indexOf('after') + 8) || '';
+  }
+  return trigm;
 }
 
 async function packTriggerData(triggerTuples) {
@@ -64,6 +86,7 @@ async function packTriggerData(triggerTuples) {
         l: folCount[0],
         r: folCount[1],
         trgt: parseTwelveTime(filterTriggerTime(doctor_decision)),
+        trgm: parseTriggerMethod(doctor_decision),
       };
     }
   }

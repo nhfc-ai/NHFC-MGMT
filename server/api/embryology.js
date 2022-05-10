@@ -4,10 +4,10 @@ const { QueryTypes } = require('sequelize');
 const mssql = require('../models/Mssql');
 
 const { newMysqlIVFInstance, formatDateWithIncrDays } = require('../utils/utils');
-const { rawDPS } = require('../utils/mssql_cmd');
+const { rawDPS, checklistER } = require('../utils/mssql_cmd');
 const { preTriggerInfo } = require('../utils/mysql_cmd');
 const { packTriggerData } = require('../utils/mysql_query');
-const { packDPSData } = require('../utils/mssql_query');
+const { packDPSData, packCheckList, getERChart } = require('../utils/mssql_query');
 
 require('dotenv').config();
 
@@ -45,7 +45,15 @@ router.get('/get-dps', async (req, res) => {
     // console.log(rawDPSTuples);
     const trigRecordsObj = await packTriggerData(rawTriggerTuples);
     // console.log(trigRecordsObj);
-    const finalDPSArray = await packDPSData(rawDPSTuples, trigRecordsObj);
+    const erChartList = await getERChart(rawDPSTuples);
+    // console.log(erChartList);
+    const cmdChecklist = await checklistER(erChartList);
+    // console.log(cmdChecklist);
+    const rawChecklistTuples = await pool.request().query(cmdChecklist);
+    // console.log(rawChecklistTuples);
+    const ChecklistObj = await packCheckList(rawChecklistTuples);
+    // console.log(ChecklistObj);
+    const finalDPSArray = await packDPSData(rawDPSTuples, trigRecordsObj, ChecklistObj);
     // console.log(finalDPSArray);
     res.json(finalDPSArray);
   } catch (err) {

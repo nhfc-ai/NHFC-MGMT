@@ -18,23 +18,25 @@ import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/DeleteOutlined';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Close';
-import { randomPrice } from '@mui/x-data-grid-generator';
 
 import {
+  ER_PATTERN,
   DPS_TABLE_COLUMN_META,
-  DPS_TABLE_HEADER,
+  FETCH_TABLE_HEADER,
+  packHeader,
+  createNoteTableHeader,
+  DPS_TABLE_HIDDEN_COLUMN,
+  DPS_INTERNAL_TABLE_HIDDEN_COLUMN,
   DPS_ROW_COLOR,
   CHECKED_ALERT,
   OVERWRITE_ALERT,
   DPS_REPORT_PREFIX,
   DPS_BASIC_PATH,
   EXCLUDED_LABEL,
+  gvMaps,
+  icsiMaps,
+  hatchingMaps,
+  getConfirmCode,
 } from '../../lib/utils';
 import { RGBColor } from '../../lib/rgbcolor';
 import notify from '../../lib/notify';
@@ -98,14 +100,16 @@ function processRows(mapRows) {
     if (value.checked === true) {
       const subList = () => {
         const l = {};
-        Object.keys(DPS_TABLE_HEADER()).forEach((ele) => {
-          // l.push(value[ele]);
-          if (ele === 'no') {
-            l[ele] = body.length + 1;
-          } else {
-            l[ele] = value[ele];
-          }
-        });
+        Object.keys(FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN)).forEach(
+          (ele) => {
+            // l.push(value[ele]);
+            if (ele === 'no') {
+              l[ele] = body.length + 1;
+            } else {
+              l[ele] = value[ele];
+            }
+          },
+        );
         return l;
       };
       body.push(subList());
@@ -118,6 +122,79 @@ function processRows(mapRows) {
     }
   });
   return [body, label];
+}
+
+function encodeGVConsents(reason, gv, icsi, hatching) {
+  if (reason.toUpperCase().startsWith(ER_PATTERN) === false) {
+    return '';
+  }
+  const gvCode = gv ? gvMaps[gv] : '9';
+  const icsiCode = icsi ? icsiMaps[icsi] : '9';
+  const hatchingCode = hatching ? hatchingMaps[hatching] : '9';
+
+  return `${gvCode}${icsiCode}${hatchingCode}`;
+}
+
+function processRowsForLabTable(mapRows) {
+  const body = [];
+  mapRows.forEach((value) => {
+    if (value.checked === true) {
+      const subList = () => {
+        const l = {};
+        Object.keys(
+          FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_INTERNAL_TABLE_HIDDEN_COLUMN),
+        ).forEach((ele) => {
+          if (ele === 'no') {
+            l[ele] = body.length + 1;
+          } else if (ele === 'gvConsent') {
+            l[ele] = encodeGVConsents(value.reason, value[ele], value.icsi, value.hatching);
+          } else {
+            l[ele] = value[ele];
+          }
+        });
+        return l;
+      };
+      body.push(subList());
+    }
+  });
+  return body;
+}
+
+function processRowsForNoteTable(mapRows) {
+  const body = [];
+  mapRows.forEach((value) => {
+    if (value.checked === true && value.reason.startsWith(ER_PATTERN) === true) {
+      const subList = () => {
+        const fullName = `${value.lastName}, ${value.firstName} `;
+        const consentCodes = encodeGVConsents(
+          value.reason,
+          value.gvConsent,
+          value.icsi,
+          value.hatching,
+        );
+        const confirmCode = getConfirmCode(consentCodes);
+        const l = [
+          body.length + 1,
+          fullName,
+          '',
+          '',
+          '',
+          '',
+          confirmCode,
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          consentCodes,
+        ];
+        return l;
+      };
+      body.push(subList());
+    }
+  });
+  return body;
 }
 
 function defineColorForRows(body) {
@@ -139,14 +216,6 @@ function getCheckedCount(mapRows) {
     }
   });
   return count;
-}
-
-function packHeader() {
-  const lColumns = [];
-  Object.keys(DPS_TABLE_HEADER()).forEach((ele) => {
-    lColumns.push({ header: DPS_TABLE_HEADER()[ele], dataKey: ele });
-  });
-  return lColumns;
 }
 
 export default function Table({ queryDate, data, loading, error, loadDataFromDB }) {
@@ -180,13 +249,18 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
   // const handleClickButton = () => {
   //   console.log(apiRef.current.getRowModels());
   // };
+  // console.log(data);
 
   const printDPS = () => {
     const doc = new jsPDF('l');
     // console.log(processRows(apiRef.current.getRowModels()));
     // console.log(packHeader());
     const [dataPDF, labelPDF] = processRows(apiRef.current.getRowModels());
-    console.log([MD, PRE, POST, MA]);
+    // console.log(dataPDF);
+    const dataInternalTablePDF = processRowsForLabTable(apiRef.current.getRowModels());
+    // console.log(dataInternalTablePDF);
+    const dataNoteTablePDF = processRowsForNoteTable(apiRef.current.getRowModels());
+    // console.log(dataNoteTablePDF);
     const colorMaps = defineColorForRows(dataPDF);
 
     doc.setFontSize(14);
@@ -214,7 +288,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     doc.text(`TOTALS: ${dataPDF.length}`, 140, 40);
 
     doc.autoTable({
-      head: [Object.values(DPS_TABLE_HEADER())],
+      head: [Object.values(FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN))],
       headStyles: {
         fillColor: [200, 200, 200],
         fontStyle: 'bold',
@@ -225,7 +299,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
       },
       body: dataPDF,
       bodyStyles: { fontSize: 6, textColor: 0 },
-      columns: packHeader(),
+      columns: packHeader(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN),
       startY: 50,
       startX: 5,
       allSectionHooks: true,
@@ -240,10 +314,10 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
 
     doc.addPage('a4', 'portrait');
     // doc.setPage(2);
-    doc.setFontSize(24);
-    doc.text('LABEL', 10, 10);
     doc.setFontSize(20);
-    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 20);
+    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
+    doc.setFontSize(24);
+    doc.text('LABEL', 10, 20);
     doc.autoTable({
       head: [['First Name', 'Last Name']],
       headStyles: {
@@ -263,6 +337,87 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
       startY: 30,
       startX: 5,
       theme: 'striped',
+    });
+
+    doc.addPage('a4', 'landscape');
+    doc.setFontSize(20);
+    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
+    doc.setFontSize(14);
+    doc.text('MD:', 30, 20);
+    // doc.addField(createTextFieldInstance(`DR. ${MD.toUpperCase()}`, 48, 4, 30, 8));
+    doc.text(`DR. ${MD.toUpperCase()}`, 48, 20);
+
+    doc.text('PRE:', 30, 30);
+    // doc.addField(createTextFieldInstance(PRE.toUpperCase(), 48, 14, 30, 8));
+    doc.text(PRE.toUpperCase(), 48, 30);
+
+    doc.text('POST:', 30, 40);
+    // doc.addField(createTextFieldInstance(POST.toUpperCase(), 48, 24, 30, 8));
+    doc.text(POST.toUpperCase(), 48, 40);
+
+    doc.text('MA:', 30, 50);
+    // doc.addField(createTextFieldInstance(MA.toUpperCase(), 48, 34, 30, 8));
+    doc.text(MA.toUpperCase(), 48, 50);
+
+    doc.setFontSize(18);
+    doc.text('DAILY PROCEDURE SCHEDULE', 100, 20);
+    doc.setFontSize(14);
+    doc.text('NEW HOPE FERTILITY CENTER', 110, 30);
+    doc.text(queryDate, 140, 40);
+    doc.text(`TOTALS: ${dataPDF.length}`, 140, 50);
+
+    doc.autoTable({
+      head: [
+        Object.values(FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_INTERNAL_TABLE_HIDDEN_COLUMN)),
+      ],
+      headStyles: {
+        fillColor: [255, 255, 255],
+        fontStyle: 'bold',
+        textColor: 0,
+        fontSize: 8,
+        lineColor: [200, 200, 200],
+        halign: 'center',
+        lineWidth: 0.1,
+      },
+      body: dataInternalTablePDF,
+      bodyStyles: { fontSize: 6, textColor: 0 },
+      columns: packHeader(DPS_TABLE_COLUMN_META, DPS_INTERNAL_TABLE_HIDDEN_COLUMN),
+      startY: 60,
+      startX: 5,
+      allSectionHooks: true,
+      theme: 'grid',
+      columnStyles: { text: { cellWidth: 'wrap' } },
+    });
+
+    doc.addPage('a4', 'landscape');
+    doc.setFontSize(20);
+    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
+
+    doc.setFontSize(18);
+    doc.text('DAILY PROCEDURE CONSENT NOTE', 100, 20);
+    doc.setFontSize(14);
+    doc.text('NEW HOPE FERTILITY CENTER', 110, 30);
+    doc.text(queryDate, 140, 40);
+    doc.text(`TOTALS: ${dataPDF.length}`, 140, 50);
+
+    doc.autoTable({
+      head: createNoteTableHeader(),
+      headStyles: {
+        fillColor: [255, 255, 255],
+        fontStyle: 'bold',
+        textColor: 0,
+        fontSize: 7,
+        lineColor: [200, 200, 200],
+        halign: 'center',
+        lineWidth: 0.1,
+      },
+      body: dataNoteTablePDF,
+      bodyStyles: { fontSize: 6, textColor: 0 },
+      startY: 60,
+      startX: 5,
+      allSectionHooks: true,
+      theme: 'grid',
+      columnStyles: { text: { cellWidth: 'wrap' } },
     });
 
     doc.setProperties({
