@@ -50,13 +50,10 @@ function parseTriggerMethod(value) {
     return value;
   }
   let trigm = '';
-  console.log([LUPRON_PATTERN, OVIDREL_PATTERN]);
   if (value.indexOf(LUPRON_PATTERN) !== -1) {
-    console.log('lup');
     trigm += 'LUP ';
   }
   if (value.indexOf(OVIDREL_PATTERN) !== -1) {
-    console.log('ovi');
     trigm += 'OVI ';
   }
   if (value.indexOf('after') !== -1) {
