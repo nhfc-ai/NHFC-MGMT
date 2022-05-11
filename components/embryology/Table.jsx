@@ -28,6 +28,7 @@ import {
   DPS_TABLE_HIDDEN_COLUMN,
   DPS_INTERNAL_TABLE_HIDDEN_COLUMN,
   DPS_ROW_COLOR,
+  EMPTY_ALERT,
   CHECKED_ALERT,
   OVERWRITE_ALERT,
   DPS_REPORT_PREFIX,
@@ -37,6 +38,8 @@ import {
   icsiMaps,
   hatchingMaps,
   getConfirmCode,
+  packNoteTableHeader,
+  DPS_INTERNAL_TABLE_ROW_NUM,
 } from '../../lib/utils';
 import { RGBColor } from '../../lib/rgbcolor';
 import notify from '../../lib/notify';
@@ -138,24 +141,22 @@ function encodeGVConsents(reason, gv, icsi, hatching) {
 function processRowsForLabTable(mapRows) {
   const body = [];
   mapRows.forEach((value) => {
-    if (value.checked === true) {
-      const subList = () => {
-        const l = {};
-        Object.keys(
-          FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_INTERNAL_TABLE_HIDDEN_COLUMN),
-        ).forEach((ele) => {
-          if (ele === 'no') {
-            l[ele] = body.length + 1;
-          } else if (ele === 'gvConsent') {
-            l[ele] = encodeGVConsents(value.reason, value[ele], value.icsi, value.hatching);
-          } else {
-            l[ele] = value[ele];
-          }
-        });
-        return l;
-      };
-      body.push(subList());
-    }
+    const subList = () => {
+      const l = {};
+      Object.keys(
+        FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_INTERNAL_TABLE_HIDDEN_COLUMN),
+      ).forEach((ele) => {
+        if (ele === 'no') {
+          l[ele] = body.length + 1;
+        } else if (ele === 'gvConsent') {
+          l[ele] = encodeGVConsents(value.reason, value[ele], value.icsi, value.hatching);
+        } else {
+          l[ele] = value[ele];
+        }
+      });
+      return l;
+    };
+    body.push(subList());
   });
   return body;
 }
@@ -194,6 +195,12 @@ function processRowsForNoteTable(mapRows) {
       body.push(subList());
     }
   });
+  const contentLength = body.length;
+  if (contentLength < DPS_INTERNAL_TABLE_ROW_NUM) {
+    for (let i = 0; i < DPS_INTERNAL_TABLE_ROW_NUM - contentLength; i += 1) {
+      body.push([i + contentLength + 1, '', '', '', '', '', '', '', '', '', '', '']);
+    }
+  }
   return body;
 }
 
@@ -263,83 +270,87 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     // console.log(dataNoteTablePDF);
     const colorMaps = defineColorForRows(dataPDF);
 
-    doc.setFontSize(14);
-    doc.text('MD:', 30, 10);
-    // doc.addField(createTextFieldInstance(`DR. ${MD.toUpperCase()}`, 48, 4, 30, 8));
-    doc.text(`DR. ${MD.toUpperCase()}`, 48, 10);
+    if (dataPDF.length > 0) {
+      doc.setFontSize(14);
+      doc.text('MD:', 30, 10);
+      // doc.addField(createTextFieldInstance(`DR. ${MD.toUpperCase()}`, 48, 4, 30, 8));
+      doc.text(`DR. ${MD.toUpperCase()}`, 48, 10);
 
-    doc.text('PRE:', 30, 20);
-    // doc.addField(createTextFieldInstance(PRE.toUpperCase(), 48, 14, 30, 8));
-    doc.text(PRE.toUpperCase(), 48, 20);
+      doc.text('PRE:', 30, 20);
+      // doc.addField(createTextFieldInstance(PRE.toUpperCase(), 48, 14, 30, 8));
+      doc.text(PRE.toUpperCase(), 48, 20);
 
-    doc.text('POST:', 30, 30);
-    // doc.addField(createTextFieldInstance(POST.toUpperCase(), 48, 24, 30, 8));
-    doc.text(POST.toUpperCase(), 48, 30);
+      doc.text('POST:', 30, 30);
+      // doc.addField(createTextFieldInstance(POST.toUpperCase(), 48, 24, 30, 8));
+      doc.text(POST.toUpperCase(), 48, 30);
 
-    doc.text('MA:', 30, 40);
-    // doc.addField(createTextFieldInstance(MA.toUpperCase(), 48, 34, 30, 8));
-    doc.text(MA.toUpperCase(), 48, 40);
+      doc.text('MA:', 30, 40);
+      // doc.addField(createTextFieldInstance(MA.toUpperCase(), 48, 34, 30, 8));
+      doc.text(MA.toUpperCase(), 48, 40);
 
-    doc.setFontSize(18);
-    doc.text('DAILY PROCEDURE SCHEDULE', 100, 10);
-    doc.setFontSize(14);
-    doc.text('NEW HOPE FERTILITY CENTER', 110, 20);
-    doc.text(queryDate, 140, 30);
-    doc.text(`TOTALS: ${dataPDF.length}`, 140, 40);
+      doc.setFontSize(18);
+      doc.text('DAILY PROCEDURE SCHEDULE', 100, 10);
+      doc.setFontSize(14);
+      doc.text('NEW HOPE FERTILITY CENTER', 110, 20);
+      doc.text(queryDate, 140, 30);
+      doc.text(`TOTALS: ${dataPDF.length}`, 140, 40);
 
-    doc.autoTable({
-      head: [Object.values(FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN))],
-      headStyles: {
-        fillColor: [200, 200, 200],
-        fontStyle: 'bold',
-        textColor: 0,
-        fontSize: 8,
-        lineColor: [0, 0, 0],
-        halign: 'center',
-      },
-      body: dataPDF,
-      bodyStyles: { fontSize: 6, textColor: 0 },
-      columns: packHeader(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN),
-      startY: 50,
-      startX: 5,
-      allSectionHooks: true,
-      didParseCell(data) {
-        if (colorMaps.has(data.row.index + 1) === true && data.section === 'body') {
-          data.cell.styles.fillColor = colorMaps.get(data.row.index + 1);
-        }
-      },
-      theme: 'grid',
-      columnStyles: { text: { cellWidth: 'wrap' } },
-    });
+      doc.autoTable({
+        head: [Object.values(FETCH_TABLE_HEADER(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN))],
+        headStyles: {
+          fillColor: [200, 200, 200],
+          fontStyle: 'bold',
+          textColor: 0,
+          fontSize: 8,
+          lineColor: [0, 0, 0],
+          halign: 'center',
+        },
+        body: dataPDF,
+        bodyStyles: { fontSize: 6, textColor: 0 },
+        columns: packHeader(DPS_TABLE_COLUMN_META, DPS_TABLE_HIDDEN_COLUMN),
+        startY: 50,
+        startX: 5,
+        allSectionHooks: true,
+        didParseCell(data) {
+          if (colorMaps.has(data.row.index + 1) === true && data.section === 'body') {
+            data.cell.styles.fillColor = colorMaps.get(data.row.index + 1);
+          }
+        },
+        theme: 'grid',
+        columnStyles: { text: { cellWidth: 'wrap' } },
+      });
 
-    doc.addPage('a4', 'portrait');
-    // doc.setPage(2);
-    doc.setFontSize(20);
-    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
-    doc.setFontSize(24);
-    doc.text('LABEL', 10, 20);
-    doc.autoTable({
-      head: [['First Name', 'Last Name']],
-      headStyles: {
-        fillColor: [200, 200, 200],
-        fontStyle: 'bold',
-        textColor: 0,
-        fontSize: 20,
-        lineColor: [0, 0, 0],
-        halign: 'center',
-      },
-      body: labelPDF,
-      bodyStyles: { fontSize: 20, fontStyle: 'bold', cellWidth: 'auto', textColor: 0 },
-      columns: [
-        { header: 'First Name', dataKey: 'firstName' },
-        { header: 'Last Name', dataKey: 'lastName' },
-      ],
-      startY: 30,
-      startX: 5,
-      theme: 'striped',
-    });
+      doc.addPage('a4', 'portrait');
+      // doc.setPage(2);
+      doc.setFontSize(20);
+      doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
+      doc.setFontSize(24);
+      doc.text('LABEL', 10, 20);
+      doc.autoTable({
+        head: [['First Name', 'Last Name']],
+        headStyles: {
+          fillColor: [200, 200, 200],
+          fontStyle: 'bold',
+          textColor: 0,
+          fontSize: 20,
+          lineColor: [0, 0, 0],
+          halign: 'center',
+        },
+        body: labelPDF,
+        bodyStyles: { fontSize: 20, fontStyle: 'bold', cellWidth: 'auto', textColor: 0 },
+        columns: [
+          { header: 'First Name', dataKey: 'firstName' },
+          { header: 'Last Name', dataKey: 'lastName' },
+        ],
+        startY: 30,
+        startX: 5,
+        theme: 'striped',
+      });
+    }
 
-    doc.addPage('a4', 'landscape');
+    if (dataPDF.length > 0) {
+      doc.addPage('a4', 'landscape');
+    }
     doc.setFontSize(20);
     doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
     doc.setFontSize(14);
@@ -364,7 +375,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     doc.setFontSize(14);
     doc.text('NEW HOPE FERTILITY CENTER', 110, 30);
     doc.text(queryDate, 140, 40);
-    doc.text(`TOTALS: ${dataPDF.length}`, 140, 50);
+    doc.text(`TOTALS: ${dataInternalTablePDF.length}`, 140, 50);
 
     doc.autoTable({
       head: [
@@ -389,42 +400,39 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
       columnStyles: { text: { cellWidth: 'wrap' } },
     });
 
-    doc.addPage('a4', 'landscape');
-    doc.setFontSize(20);
-    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
+    if (dataPDF.length > 0) {
+      doc.addPage('a4', 'landscape');
+      doc.setFontSize(20);
+      doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
 
-    doc.setFontSize(18);
-    doc.text('DAILY PROCEDURE CONSENT NOTE', 100, 20);
-    doc.setFontSize(14);
-    doc.text('NEW HOPE FERTILITY CENTER', 110, 30);
-    doc.text(queryDate, 140, 40);
-    doc.text(`TOTALS: ${dataPDF.length}`, 140, 50);
+      doc.setFontSize(18);
+      doc.text(`DAILY PROCEDURE CONSENT NOTE on ${queryDate}`, 60, 20);
 
-    doc.autoTable({
-      head: createNoteTableHeader(),
-      headStyles: {
-        fillColor: [255, 255, 255],
-        fontStyle: 'bold',
-        textColor: 0,
-        fontSize: 7,
-        lineColor: [200, 200, 200],
-        halign: 'center',
-        lineWidth: 0.1,
-      },
-      body: dataNoteTablePDF,
-      bodyStyles: { fontSize: 6, textColor: 0 },
-      startY: 60,
-      startX: 5,
-      allSectionHooks: true,
-      theme: 'grid',
-      columnStyles: { text: { cellWidth: 'wrap' } },
-    });
+      doc.autoTable({
+        head: createNoteTableHeader(),
+        headStyles: {
+          fillColor: [255, 255, 255],
+          fontStyle: 'bold',
+          textColor: 0,
+          fontSize: 8,
+          lineColor: [200, 200, 200],
+          halign: 'center',
+          lineWidth: 0.1,
+        },
+        body: dataNoteTablePDF,
+        bodyStyles: { fontSize: 10, textColor: 0 },
+        startY: 25,
+        startX: 5,
+        margin: 1,
+        theme: 'striped',
+      });
+    }
 
     doc.setProperties({
       title: DPS_FILE_NAME,
       subject: DPS_FILE_NAME,
       author: 'Jia Wang',
-      keywords: 'DPS flow by Jia Wang',
+      keywords: 'DPS flow implemented by Jia Wang',
       creator: 'nhfc-mgmt',
     });
 
@@ -473,7 +481,10 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     }
 
     // Firstly pop up checked rows alert.
-    if (getCheckedCount(apiRef.current.getRowModels()) < data.length) {
+    const checkedCountAfterSubmit = getCheckedCount(apiRef.current.getRowModels());
+    if (checkedCountAfterSubmit === 0) {
+      setAlert(EMPTY_ALERT);
+    } else if (checkedCountAfterSubmit < data.length) {
       setAlert(CHECKED_ALERT);
       // renderConfirmDialog();
     } else {
