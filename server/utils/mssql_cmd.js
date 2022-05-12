@@ -60,7 +60,7 @@ const rawDPS = (apptDate) => {
       inner join dbo.Patien_Info_V5 as p on a.Chart = p.Chart_Number
       left join grp as e on e.ARTCycle_ID = a.ARTCycle_ID and e.rn=1
       where a.Resource = 6 and a.Appt_Date = '${apptDate}' and a.reason in ${DPS_CODE}
-      order by a.Appt_Time, a.reason
+      order by a.reason, a.Appt_Time
   `;
 };
 
