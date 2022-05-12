@@ -351,31 +351,31 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
     if (dataPDF.length > 0) {
       doc.addPage('a4', 'landscape');
     }
-    doc.setFontSize(20);
-    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
-    doc.setFontSize(14);
-    doc.text('MD:', 30, 20);
+    doc.setFontSize(10);
+    doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 5);
+    doc.setFontSize(10);
+    doc.text('MD:', 30, 10);
     // doc.addField(createTextFieldInstance(`DR. ${MD.toUpperCase()}`, 48, 4, 30, 8));
-    doc.text(`DR. ${MD.toUpperCase()}`, 48, 20);
+    doc.text(`DR. ${MD.toUpperCase()}`, 48, 10);
 
-    doc.text('PRE:', 30, 30);
+    doc.text('PRE:', 30, 15);
     // doc.addField(createTextFieldInstance(PRE.toUpperCase(), 48, 14, 30, 8));
-    doc.text(PRE.toUpperCase(), 48, 30);
+    doc.text(PRE.toUpperCase(), 48, 15);
 
-    doc.text('POST:', 30, 40);
+    doc.text('POST:', 30, 20);
     // doc.addField(createTextFieldInstance(POST.toUpperCase(), 48, 24, 30, 8));
-    doc.text(POST.toUpperCase(), 48, 40);
+    doc.text(POST.toUpperCase(), 48, 20);
 
-    doc.text('MA:', 30, 50);
+    doc.text('MA:', 30, 25);
     // doc.addField(createTextFieldInstance(MA.toUpperCase(), 48, 34, 30, 8));
-    doc.text(MA.toUpperCase(), 48, 50);
+    doc.text(MA.toUpperCase(), 48, 25);
 
-    doc.setFontSize(18);
-    doc.text('DAILY PROCEDURE SCHEDULE', 100, 20);
-    doc.setFontSize(14);
-    doc.text('NEW HOPE FERTILITY CENTER', 110, 30);
-    doc.text(queryDate, 140, 40);
-    doc.text(`TOTALS: ${dataInternalTablePDF.length}`, 140, 50);
+    doc.setFontSize(10);
+    doc.text('DAILY PROCEDURE SCHEDULE', 100, 10);
+    doc.setFontSize(10);
+    doc.text('NEW HOPE FERTILITY CENTER', 100, 15);
+    doc.text(queryDate, 120, 20);
+    doc.text(`TOTALS: ${dataInternalTablePDF.length}`, 120, 25);
 
     doc.autoTable({
       head: [
@@ -393,11 +393,12 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
       body: dataInternalTablePDF,
       bodyStyles: { fontSize: 6, textColor: 0 },
       columns: packHeader(DPS_TABLE_COLUMN_META, DPS_INTERNAL_TABLE_HIDDEN_COLUMN),
-      startY: 60,
+      startY: 30,
       startX: 5,
       allSectionHooks: true,
       theme: 'grid',
       columnStyles: { text: { cellWidth: 'wrap' } },
+      margin: 1,
     });
 
     if (dataPDF.length > 0) {
