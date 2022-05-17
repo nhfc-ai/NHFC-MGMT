@@ -11,6 +11,7 @@ import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
+import Switch from '@mui/material/Switch';
 import InputAdornment from '@mui/material/InputAdornment';
 import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
@@ -18,6 +19,11 @@ import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from '@mui/material/FormControl';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormHelperText from '@mui/material/FormHelperText';
 
 import {
   ER_PATTERN,
@@ -40,6 +46,7 @@ import {
   getConfirmCode,
   packNoteTableHeader,
   DPS_INTERNAL_TABLE_ROW_NUM,
+  THAW_EGG_PATTERN,
 } from '../../lib/utils';
 import { RGBColor } from '../../lib/rgbcolor';
 import notify from '../../lib/notify';
@@ -164,7 +171,11 @@ function processRowsForLabTable(mapRows) {
 function processRowsForNoteTable(mapRows) {
   const body = [];
   mapRows.forEach((value) => {
-    if (value.checked === true && value.reason.startsWith(ER_PATTERN) === true) {
+    if (
+      value.checked === true &&
+      (value.reason.startsWith(ER_PATTERN) === true ||
+        THAW_EGG_PATTERN.indexOf(value.reason) !== -1)
+    ) {
       const subList = () => {
         const fullName = `${value.lastName}, ${value.firstName} `;
         const consentCodes = encodeGVConsents(
@@ -246,6 +257,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
   const [POST, setPOST] = React.useState('');
   const [MA, setMA] = React.useState('');
   const [alert, setAlert] = React.useState('');
+  const [sorted, setSorted] = React.useState(false);
   const [checkedCount, setCheckedCount] = React.useState(0);
   const { apiRef, columns } = useApiRef();
 
@@ -261,12 +273,15 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
   const printDPS = () => {
     const doc = new jsPDF('l');
     // console.log(processRows(apiRef.current.getRowModels()));
+    // console.log(processRows(apiRef.current.getSortedRows()));
+    // console.log(processRows(apiRef.current.getSortModel()));
     // console.log(packHeader());
-    const [dataPDF, labelPDF] = processRows(apiRef.current.getRowModels());
+    const rows = sorted ? apiRef.current.getSortedRows() : apiRef.current.getRowModels();
+    const [dataPDF, labelPDF] = processRows(rows);
     // console.log(dataPDF);
-    const dataInternalTablePDF = processRowsForLabTable(apiRef.current.getRowModels());
+    const dataInternalTablePDF = processRowsForLabTable(rows);
     // console.log(dataInternalTablePDF);
-    const dataNoteTablePDF = processRowsForNoteTable(apiRef.current.getRowModels());
+    const dataNoteTablePDF = processRowsForNoteTable(rows);
     // console.log(dataNoteTablePDF);
     const colorMaps = defineColorForRows(dataPDF);
 
@@ -554,10 +569,30 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
             />
             <br />
           </Grid>
-          <Grid item xs={8}>
+          <Grid item xs={4}>
             <h1>DAILY PROCEDURE SCHEDULE</h1>
             <h2> On {queryDate}</h2>
             <h2> New Hope Fertility Center</h2>
+          </Grid>
+
+          <Grid item xs={4}>
+            <FormControl component="fieldset" variant="standard">
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={sorted}
+                      onChange={(e) => {
+                        setSorted(e.target.checked);
+                      }}
+                      name="sorted"
+                    />
+                  }
+                  label="Print Out with a customized sorting way?"
+                />
+              </FormGroup>
+              <FormHelperText>Ascending Order by Reason As Default</FormHelperText>
+            </FormControl>
           </Grid>
 
           <Grid item xs={12}>
