@@ -591,7 +591,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
                   label="Print Out with a customized sorting way?"
                 />
               </FormGroup>
-              <FormHelperText>Ascending Order by Reason As Default</FormHelperText>
+              <FormHelperText>Ascending Order by Time As Default</FormHelperText>
             </FormControl>
           </Grid>
 
