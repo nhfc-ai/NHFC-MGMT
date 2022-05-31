@@ -334,33 +334,6 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
         theme: 'grid',
         columnStyles: { text: { cellWidth: 'wrap' } },
       });
-
-      doc.addPage('a4', 'portrait');
-      // doc.setPage(2);
-      doc.setFontSize(20);
-      doc.text('FOR EMBRYOLOGY LAB ONLY', 10, 10);
-      doc.setFontSize(24);
-      doc.text('LABEL', 10, 20);
-      doc.autoTable({
-        head: [['First Name', 'Last Name']],
-        headStyles: {
-          fillColor: [200, 200, 200],
-          fontStyle: 'bold',
-          textColor: 0,
-          fontSize: 20,
-          lineColor: [0, 0, 0],
-          halign: 'center',
-        },
-        body: labelPDF,
-        bodyStyles: { fontSize: 20, fontStyle: 'bold', cellWidth: 'auto', textColor: 0 },
-        columns: [
-          { header: 'First Name', dataKey: 'firstName' },
-          { header: 'Last Name', dataKey: 'lastName' },
-        ],
-        startY: 30,
-        startX: 5,
-        theme: 'striped',
-      });
     }
 
     if (dataPDF.length > 0) {
@@ -441,6 +414,15 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
         startX: 5,
         margin: 1,
         theme: 'striped',
+      });
+
+      labelPDF.forEach((ele) => {
+        let offset = 10;
+        doc.addPage([28, 89], 'l');
+        doc.setFontSize(24);
+        doc.text(ele.firstName, 10, offset);
+        offset += 10;
+        doc.text(ele.lastName, 10, offset);
       });
     }
 
