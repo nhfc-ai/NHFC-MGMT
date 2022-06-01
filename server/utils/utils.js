@@ -260,6 +260,7 @@ const iovR1MainTable = [
   'Age',
   'Race',
   'Email',
+  'Phone',
   'Primary_Code',
   'Address',
   'City',

@@ -54,8 +54,6 @@ class IndexWithData extends React.Component {
       functions: {
         'IOV R1 Statistics': 'iovStats',
         'IOV Calendly Monthly Log': 'iovCalendly',
-        'IOV Follow Up': 'iovFollowUp',
-        'R1 Follow Up': 'r1FollowUp',
       },
     };
   }

@@ -838,6 +838,7 @@ async function organizeArrayForDisplayV3(obj, checkedMonitor, checkedER, checked
         obj[element].age,
         obj[element].race,
         obj[element].email,
+        obj[element].phone,
         obj[element].code,
         obj[element].address,
         obj[element].city,
