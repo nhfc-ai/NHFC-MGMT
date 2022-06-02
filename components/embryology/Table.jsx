@@ -582,7 +582,7 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
               <DataGrid
                 rows={data}
                 columns={columns}
-                pageSize={25}
+                pageSize={1000}
                 autoHeight
                 autoPageSize
                 hideFooter
