@@ -420,9 +420,9 @@ export default function Table({ queryDate, data, loading, error, loadDataFromDB 
         let offset = 10;
         doc.addPage([28, 89], 'l');
         doc.setFontSize(24);
-        doc.text(ele.firstName, 10, offset);
-        offset += 10;
         doc.text(ele.lastName, 10, offset);
+        offset += 10;
+        doc.text(ele.firstName, 10, offset);
       });
     }
 
