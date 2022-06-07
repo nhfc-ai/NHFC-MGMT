@@ -47,6 +47,7 @@ import {
   packNoteTableHeader,
   DPS_INTERNAL_TABLE_ROW_NUM,
   THAW_EGG_PATTERN,
+  PULL_DOWN_LIST,
 } from '../../lib/utils';
 import { RGBColor } from '../../lib/rgbcolor';
 import notify from '../../lib/notify';
@@ -103,10 +104,24 @@ function createTextFieldInstance(v, ...coor) {
   return textField;
 }
 
+function downSpecReasonRows(mapRows) {
+  const specRows = [];
+  const normalRows = [];
+  mapRows.forEach((value) => {
+    if (PULL_DOWN_LIST.indexOf(value.reason) === -1) {
+      normalRows.push(value);
+    } else {
+      specRows.push(value);
+    }
+  });
+  return normalRows.concat(specRows);
+}
+
 function processRows(mapRows) {
   const body = [];
   const label = [];
-  mapRows.forEach((value) => {
+  const resortedMapRows = downSpecReasonRows(mapRows);
+  resortedMapRows.forEach((value) => {
     if (value.checked === true) {
       const subList = () => {
         const l = {};
@@ -147,7 +162,8 @@ function encodeGVConsents(reason, gv, icsi, hatching) {
 
 function processRowsForLabTable(mapRows) {
   const body = [];
-  mapRows.forEach((value) => {
+  const resortedMapRows = downSpecReasonRows(mapRows);
+  resortedMapRows.forEach((value) => {
     const subList = () => {
       const l = {};
       Object.keys(
@@ -170,7 +186,8 @@ function processRowsForLabTable(mapRows) {
 
 function processRowsForNoteTable(mapRows) {
   const body = [];
-  mapRows.forEach((value) => {
+  const resortedMapRows = downSpecReasonRows(mapRows);
+  resortedMapRows.forEach((value) => {
     if (
       value.checked === true &&
       (value.reason.startsWith(ER_PATTERN) === true ||
